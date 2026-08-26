@@ -170,10 +170,24 @@ func TestCreateGrantQuery(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		out := createGrantQuery(c.resource, c.privileges)
+		out := createGrantQuery(c.resource, c.privileges, c.resource.Get("objects").(*schema.Set))
 		if out != c.expected {
 			t.Fatalf("error matching output and expected: %#v vs %#v", out, c.expected)
 		}
+	}
+
+	// The builder must honour the objects parameter over the resource's own set.
+	subsetResource := schema.TestResourceDataRaw(t, resourcePostgreSQLGrant().Schema, map[string]any{
+		"object_type": "table",
+		"schema":      databaseName,
+		"objects":     tableObjects,
+		"role":        roleName,
+	})
+	subset := schema.NewSet(schema.HashString, []any{"o1"})
+	out := createGrantQuery(subsetResource, []string{"SELECT"}, subset)
+	expected := fmt.Sprintf(`GRANT SELECT ON TABLE %s."o1" TO %s`, pq.QuoteIdentifier(databaseName), pq.QuoteIdentifier(roleName))
+	if out != expected {
+		t.Fatalf("error matching output and expected: %#v vs %#v", out, expected)
 	}
 }
 
@@ -293,10 +307,56 @@ func TestCreateRevokeQuery(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		out := createRevokeQuery(c.resource.Get)
+		out := createRevokeQuery(c.resource.Get, c.resource.Get("objects").(*schema.Set))
 		if out != c.expected {
 			t.Fatalf("error matching output and expected: %#v vs %#v", out, c.expected)
 		}
+	}
+
+	// The builder must honour the objects parameter over the resource's own set.
+	subsetResource := schema.TestResourceDataRaw(t, resourcePostgreSQLGrant().Schema, map[string]any{
+		"object_type": "table",
+		"schema":      databaseName,
+		"objects":     tableObjects,
+		"privileges":  []any{"SELECT"},
+		"role":        roleName,
+	})
+	subset := schema.NewSet(schema.HashString, []any{"o1"})
+	out := createRevokeQuery(subsetResource.Get, subset)
+	expected := fmt.Sprintf(`REVOKE SELECT ON TABLE %s."o1" FROM %s`, pq.QuoteIdentifier(databaseName), pq.QuoteIdentifier(roleName))
+	if out != expected {
+		t.Fatalf("error matching output and expected: %#v vs %#v", out, expected)
+	}
+}
+
+func TestRevokeSuppressible(t *testing.T) {
+	tests := []struct {
+		name        string
+		err         error
+		objectCount int
+		columnCount int
+		expected    bool
+	}{
+		{"schema gone", &pq.Error{Code: "3F000"}, 5, 0, true},
+		{"grantee role gone", &pq.Error{Code: "42704"}, 5, 0, true},
+		{"single table gone", &pq.Error{Code: "42P01"}, 1, 0, true},
+		{"single function gone", &pq.Error{Code: "42883"}, 1, 0, true},
+		{"single column gone", &pq.Error{Code: "42703"}, 1, 1, true},
+		{"one of several tables gone", &pq.Error{Code: "42P01"}, 2, 0, false},
+		{"one of several functions gone", &pq.Error{Code: "42883"}, 2, 0, false},
+		{"one of several columns gone", &pq.Error{Code: "42703"}, 1, 2, false},
+		{"wrapped pq error", fmt.Errorf("could not execute revoke query: %w", &pq.Error{Code: "42P01"}), 1, 0, true},
+		{"permission denied", &pq.Error{Code: "42501"}, 1, 0, false},
+		{"non-pq error", fmt.Errorf("some other error"), 1, 0, false},
+		{"nil error", nil, 1, 0, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if out := revokeSuppressible(tt.err, tt.objectCount, tt.columnCount); out != tt.expected {
+				t.Fatalf("expected %v, got %v", tt.expected, out)
+			}
+		})
 	}
 }
 
@@ -561,6 +621,401 @@ func TestAccPostgresqlGrantObjects(t *testing.T) {
 						return testCheckTablesPrivileges(t, dbName, roleName, testTables, []string{})
 					},
 				),
+			},
+		},
+	})
+}
+
+func TestAccPostgresqlGrantObjectNotFound(t *testing.T) {
+	skipIfNotAcc(t)
+
+	config := getTestConfig(t)
+	dbSuffix, teardown := setupTestDatabase(t, true, true)
+	defer teardown()
+
+	testTables := []string{"test_schema.test_table", "test_schema.test_table2"}
+	createTestTables(t, dbSuffix, testTables, "")
+
+	dbName, roleName := getTestDBNames(dbSuffix)
+
+	var testGrant = fmt.Sprintf(`
+	resource "postgresql_grant" "test" {
+		database                = "%s"
+		role                    = "%s"
+		schema                  = "test_schema"
+		object_type             = "table"
+		objects                 = ["test_table", "test_table2"]
+		privileges              = %%s
+		ignore_object_not_found = true
+	}
+	`, dbName, roleName)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testCheckCompatibleVersion(t, featurePrivileges)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(testGrant, `["SELECT"]`),
+				Check: resource.ComposeTestCheckFunc(
+					func(*terraform.State) error {
+						return testCheckTablesPrivileges(t, dbName, roleName, testTables, []string{"SELECT"})
+					},
+				),
+			},
+			{
+				// The dropped table must be skipped instead of failing the update.
+				PreConfig: func() {
+					dbExecute(t, config.connStr(dbName), "DROP TABLE test_schema.test_table2")
+				},
+				Config: fmt.Sprintf(testGrant, `["SELECT", "INSERT"]`),
+				Check: resource.ComposeTestCheckFunc(
+					func(*terraform.State) error {
+						return testCheckTablesPrivileges(t, dbName, roleName, []string{testTables[0]}, []string{"SELECT", "INSERT"})
+					},
+				),
+			},
+			{
+				Config:  fmt.Sprintf(testGrant, `["SELECT", "INSERT"]`),
+				Destroy: true,
+				Check: resource.ComposeTestCheckFunc(
+					func(*terraform.State) error {
+						return testCheckTablesPrivileges(t, dbName, roleName, []string{testTables[0]}, []string{})
+					},
+				),
+			},
+		},
+	})
+}
+
+func TestAccPostgresqlGrantObjectNotFoundStrict(t *testing.T) {
+	skipIfNotAcc(t)
+
+	config := getTestConfig(t)
+	dbSuffix, teardown := setupTestDatabase(t, true, true)
+	defer teardown()
+
+	testTables := []string{"test_schema.test_table", "test_schema.test_table2"}
+	createTestTables(t, dbSuffix, testTables, "")
+
+	dbName, roleName := getTestDBNames(dbSuffix)
+
+	var testGrant = fmt.Sprintf(`
+	resource "postgresql_grant" "test" {
+		database                = "%s"
+		role                    = "%s"
+		schema                  = "test_schema"
+		object_type             = "table"
+		objects                 = ["test_table", "test_table2"]
+		privileges              = %%s
+		ignore_object_not_found = %%s
+	}
+	`, dbName, roleName)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testCheckCompatibleVersion(t, featurePrivileges)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(testGrant, `["SELECT"]`, "false"),
+				Check: resource.ComposeTestCheckFunc(
+					func(*terraform.State) error {
+						return testCheckTablesPrivileges(t, dbName, roleName, testTables, []string{"SELECT"})
+					},
+				),
+			},
+			{
+				PreConfig: func() {
+					dbExecute(t, config.connStr(dbName), "DROP TABLE test_schema.test_table2")
+				},
+				Config:      fmt.Sprintf(testGrant, `["SELECT", "INSERT"]`, "false"),
+				ExpectError: regexp.MustCompile(`relation .* does not exist`),
+			},
+			{
+				// Turning the flag on unblocks the update and the final destroy.
+				Config: fmt.Sprintf(testGrant, `["SELECT", "INSERT"]`, "true"),
+				Check: resource.ComposeTestCheckFunc(
+					func(*terraform.State) error {
+						return testCheckTablesPrivileges(t, dbName, roleName, []string{testTables[0]}, []string{"SELECT", "INSERT"})
+					},
+				),
+			},
+		},
+	})
+}
+
+func TestAccPostgresqlGrantAllObjectsDropped(t *testing.T) {
+	skipIfNotAcc(t)
+
+	config := getTestConfig(t)
+	dbSuffix, teardown := setupTestDatabase(t, true, true)
+	defer teardown()
+
+	testTables := []string{"test_schema.test_table"}
+	createTestTables(t, dbSuffix, testTables, "")
+
+	dbName, roleName := getTestDBNames(dbSuffix)
+
+	var testGrant = fmt.Sprintf(`
+	resource "postgresql_grant" "test" {
+		database                = "%s"
+		role                    = "%s"
+		schema                  = "test_schema"
+		object_type             = "table"
+		objects                 = ["test_table"]
+		privileges              = %%s
+		ignore_object_not_found = true
+	}
+	`, dbName, roleName)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testCheckCompatibleVersion(t, featurePrivileges)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(testGrant, `["SELECT"]`),
+				Check: resource.ComposeTestCheckFunc(
+					func(*terraform.State) error {
+						return testCheckTablesPrivileges(t, dbName, roleName, testTables, []string{"SELECT"})
+					},
+				),
+			},
+			{
+				// Granting on no existing objects must fail rather than silently record the grant.
+				PreConfig: func() {
+					dbExecute(t, config.connStr(dbName), "DROP TABLE test_schema.test_table")
+				},
+				Config:      fmt.Sprintf(testGrant, `["SELECT", "INSERT"]`),
+				ExpectError: regexp.MustCompile("none of the table objects to grant on exist"),
+			},
+		},
+	})
+}
+
+func TestAccPostgresqlGrantFunctionDropped(t *testing.T) {
+	skipIfNotAcc(t)
+
+	config := getTestConfig(t)
+	dsn := config.connStr("postgres")
+
+	dbExecute(t, dsn, fmt.Sprintf("CREATE ROLE test_role LOGIN PASSWORD '%s'", testRolePassword))
+	dbExecute(t, dsn, "CREATE SCHEMA test_schema")
+	dbExecute(t, dsn, "GRANT USAGE ON SCHEMA test_schema TO test_role")
+
+	dbExecute(t, dsn, `
+CREATE FUNCTION test_schema.test() RETURNS text
+	AS $$ select 'foo'::text $$
+    LANGUAGE SQL;
+`)
+	defer func() {
+		dbExecute(t, dsn, "DROP SCHEMA test_schema CASCADE")
+		dbExecute(t, dsn, "DROP ROLE test_role")
+	}()
+
+	tfConfig := `
+resource postgresql_grant "test" {
+  database                = "postgres"
+  role                    = "test_role"
+  schema                  = "test_schema"
+  object_type             = "function"
+  objects                 = ["test"]
+  privileges              = ["EXECUTE"]
+  ignore_object_not_found = true
+}
+	`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testCheckCompatibleVersion(t, featurePrivileges)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: tfConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("postgresql_grant.test", "privileges.0", "EXECUTE"),
+				),
+			},
+			{
+				// Functions are not filtered proactively, so this exercises the reactive 42883 tolerance.
+				PreConfig: func() {
+					dbExecute(t, dsn, "DROP FUNCTION test_schema.test()")
+				},
+				Config:  tfConfig,
+				Destroy: true,
+			},
+		},
+	})
+}
+
+func TestAccPostgresqlGrantEmptyObjectsIgnoreNotFound(t *testing.T) {
+	skipIfNotAcc(t)
+
+	dbSuffix, teardown := setupTestDatabase(t, true, true)
+	defer teardown()
+
+	testTables := []string{"test_schema.test_table", "test_schema.test_table2"}
+	createTestTables(t, dbSuffix, testTables, "")
+
+	dbName, roleName := getTestDBNames(dbSuffix)
+
+	var testGrant = fmt.Sprintf(`
+	resource "postgresql_grant" "test" {
+		database                = "%s"
+		role                    = "%s"
+		schema                  = "test_schema"
+		object_type             = "table"
+		objects                 = []
+		privileges              = ["SELECT"]
+		ignore_object_not_found = true
+	}
+	`, dbName, roleName)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testCheckCompatibleVersion(t, featurePrivileges)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testGrant,
+				Check: resource.ComposeTestCheckFunc(
+					func(*terraform.State) error {
+						return testCheckTablesPrivileges(t, dbName, roleName, testTables, []string{"SELECT"})
+					},
+				),
+			},
+			{
+				// Empty objects means ALL tables in the schema: the flag must
+				// not skip the GRANT/REVOKE statements for it.
+				Config:  testGrant,
+				Destroy: true,
+				Check: resource.ComposeTestCheckFunc(
+					func(*terraform.State) error {
+						return testCheckTablesPrivileges(t, dbName, roleName, testTables, []string{})
+					},
+				),
+			},
+		},
+	})
+}
+
+func TestAccPostgresqlGrantSequenceDropped(t *testing.T) {
+	skipIfNotAcc(t)
+
+	config := getTestConfig(t)
+	dbSuffix, teardown := setupTestDatabase(t, true, true)
+	defer teardown()
+
+	dbName, roleName := getTestDBNames(dbSuffix)
+
+	dbExecute(t, config.connStr(dbName), "CREATE SEQUENCE test_schema.test_seq")
+	dbExecute(t, config.connStr(dbName), "CREATE SEQUENCE test_schema.test_seq2")
+
+	var testGrant = fmt.Sprintf(`
+	resource "postgresql_grant" "test" {
+		database                = "%s"
+		role                    = "%s"
+		schema                  = "test_schema"
+		object_type             = "sequence"
+		objects                 = ["test_seq", "test_seq2"]
+		privileges              = %%s
+		ignore_object_not_found = true
+	}
+	`, dbName, roleName)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testCheckCompatibleVersion(t, featurePrivileges)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(testGrant, `["SELECT"]`),
+			},
+			{
+				// A same-named relation of another kind must not count as the
+				// dropped sequence existing, or the GRANT would fail with 42809.
+				PreConfig: func() {
+					dbExecute(t, config.connStr(dbName), "DROP SEQUENCE test_schema.test_seq2")
+					dbExecute(t, config.connStr(dbName), "CREATE TABLE test_schema.test_seq2 (val text)")
+				},
+				Config: fmt.Sprintf(testGrant, `["SELECT", "USAGE"]`),
+			},
+		},
+	})
+}
+
+func TestAccPostgresqlGrantFunctionPartialDropped(t *testing.T) {
+	skipIfNotAcc(t)
+
+	config := getTestConfig(t)
+	dsn := config.connStr("postgres")
+
+	dbExecute(t, dsn, fmt.Sprintf("CREATE ROLE test_role LOGIN PASSWORD '%s'", testRolePassword))
+	dbExecute(t, dsn, "CREATE SCHEMA test_schema")
+	dbExecute(t, dsn, "GRANT USAGE ON SCHEMA test_schema TO test_role")
+
+	createFunction := `
+CREATE FUNCTION test_schema.%s() RETURNS text
+	AS $$ select 'foo'::text $$
+    LANGUAGE SQL;
+`
+	dbExecute(t, dsn, fmt.Sprintf(createFunction, "test"))
+	dbExecute(t, dsn, fmt.Sprintf(createFunction, "test2"))
+	defer func() {
+		dbExecute(t, dsn, "DROP SCHEMA test_schema CASCADE")
+		dbExecute(t, dsn, "DROP ROLE test_role")
+	}()
+
+	tfConfig := `
+resource postgresql_grant "test" {
+  database                = "postgres"
+  role                    = "test_role"
+  schema                  = "test_schema"
+  object_type             = "function"
+  objects                 = ["test", "test2"]
+  privileges              = ["EXECUTE"]
+  ignore_object_not_found = true
+}
+	`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testCheckCompatibleVersion(t, featurePrivileges)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: tfConfig,
+			},
+			{
+				// Suppressing this REVOKE would silently leave EXECUTE on the
+				// surviving function, so the destroy must fail instead.
+				PreConfig: func() {
+					dbExecute(t, dsn, "DROP FUNCTION test_schema.test2()")
+				},
+				Config:      tfConfig,
+				Destroy:     true,
+				ExpectError: regexp.MustCompile(`could not find a function named`),
+			},
+			{
+				PreConfig: func() {
+					dbExecute(t, dsn, fmt.Sprintf(createFunction, "test2"))
+				},
+				Config: tfConfig,
 			},
 		},
 	})

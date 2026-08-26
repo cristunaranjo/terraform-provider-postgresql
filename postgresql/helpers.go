@@ -2,7 +2,6 @@ package postgresql
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -11,21 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/lib/pq"
 )
-
-func isObjectNotFoundError(err error) bool {
-	var pqErr *pq.Error
-	if !errors.As(err, &pqErr) {
-		return false
-	}
-	switch pqErr.Code {
-	case "42P01", // undefined_table (covers tables, sequences, and other relations)
-		"42883", // undefined_function
-		"42704", // undefined_object (foreign servers, FDWs, etc.)
-		"3F000": // invalid_schema_name
-		return true
-	}
-	return false
-}
 
 func PGResourceFunc(fn func(*DBConnection, *schema.ResourceData) error) func(*schema.ResourceData, any) error {
 	return func(d *schema.ResourceData, meta any) error {
@@ -524,7 +508,7 @@ SELECT rolname
 	err := db.QueryRow(query, dbQueryValues...).Scan(&owner)
 	switch {
 	case err == sql.ErrNoRows:
-		return "", fmt.Errorf("could not find database '%s' while looking for owner", database)
+		return "", fmt.Errorf("could not find database '%s' while looking for owner: %w", database, sql.ErrNoRows)
 	case err != nil:
 		return "", fmt.Errorf("error while looking for the owner of database '%s': %w", database, err)
 	}
@@ -543,7 +527,7 @@ SELECT rolname
 	err := db.QueryRow(query, schemaName).Scan(&owner)
 	switch {
 	case err == sql.ErrNoRows:
-		return "", fmt.Errorf("could not find schema '%s' while looking for owner", schemaName)
+		return "", fmt.Errorf("could not find schema '%s' while looking for owner: %w", schemaName, sql.ErrNoRows)
 	case err != nil:
 		return "", fmt.Errorf("error while looking for the owner of schema '%s': %w", schemaName, err)
 	}
