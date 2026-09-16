@@ -610,7 +610,11 @@ SELECT c.relname
 	if err != nil {
 		return nil, fmt.Errorf("could not check for existence of grant objects: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error closing rows: %v", err)
+		}
+	}()
 
 	existing := schema.NewSet(schema.HashString, nil)
 	for rows.Next() {
