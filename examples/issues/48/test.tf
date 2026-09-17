@@ -2,7 +2,7 @@ terraform {
   required_version = ">= 0.14"
   required_providers {
     postgresql = {
-      source  = "cyrilgdn/postgresql"
+      source  = "cristunaranjo/postgresql"
       version = ">=1.12"
     }
   }
