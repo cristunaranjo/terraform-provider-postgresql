@@ -14,6 +14,7 @@ See [PostgreSQL documentation](https://www.postgresql.org/docs/current/sql-grant
 
 ~> **Note:** This resource needs Postgresql version 9 or above.
 ~> **Note:** Using column & table grants on the _same_ table with the _same_ privileges can lead to unexpected behaviours.
+~> **Note:** Destroying a grant tolerates objects that no longer exist: missing sequences are skipped, as are missing tables, views, materialized views, partitioned and foreign tables for `object_type = "table"`, and a schema or grantee role that is gone counts as already revoked. A grant listing several functions, procedures or routines still fails if one of them is gone, as skipping it would leave privileges on the surviving ones.
 
 ## Usage
 
@@ -50,7 +51,6 @@ resource "postgresql_grant" "read_insert_column" {
 * `objects` - (Optional) The objects upon which to grant the privileges. An empty list (the default) means to grant permissions on *all* objects of the specified type. You cannot specify this option if the `object_type` is `database` or `schema`. When `object_type` is `column`, only one value is allowed.
 * `columns` - (Optional) The columns upon which to grant the privileges. Required when `object_type` is `column`. You cannot specify this option if the `object_type` is not `column`.
 * `with_grant_option` - (Optional) Whether the recipient of these privileges can grant the same privileges to others. Defaults to false.
-* `ignore_object_not_found` - (Optional) Whether tables or sequences listed in `objects` (including the table of a `column` grant) that no longer exist — e.g. dropped outside Terraform — are skipped when granting or revoking privileges, instead of making the whole GRANT/REVOKE statement fail; each skipped object is logged as a provider warning. Granting still fails if none of the listed objects exist, so a typo cannot silently apply nothing. On destroy, the grant is treated as already revoked when its schema, its grantee role, or a single listed object is gone; a missing object in a multi-object function or column grant still fails the destroy, as skipping it would silently leave privileges on the surviving objects. Defaults to false.
 
 
 ## Examples

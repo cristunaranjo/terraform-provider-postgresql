@@ -101,12 +101,6 @@ func resourcePostgreSQLGrant() *schema.Resource {
 				Default:     false,
 				Description: "Permit the grant recipient to grant it to others",
 			},
-			"ignore_object_not_found": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "If true, skip tables or sequences in `objects` that no longer exist when granting or revoking privileges instead of erroring (granting still fails if none of them exist), and treat a destroy as already revoked when the schema, the grantee role, or a single-object grant's object is gone",
-			},
 		},
 	}
 }
@@ -202,7 +196,7 @@ func resourcePostgreSQLGrantCreateOrUpdate(db *DBConnection, d *schema.ResourceD
 		// Revoke all privileges before granting otherwise reducing privileges will not work.
 		// We just have to revoke them in the same transaction so the role will not lose its
 		// privileges between the revoke and grant statements.
-		if err := revokeRolePrivileges(txn, d, usePrevious); err != nil {
+		if err := revokeRolePrivileges(txn, d, usePrevious, false); err != nil {
 			return err
 		}
 		if err := grantRolePrivileges(txn, d); err != nil {
@@ -254,7 +248,7 @@ func resourcePostgreSQLGrantDelete(db *DBConnection, d *schema.ResourceData) err
 
 	owners, err := getRolesToGrant(txn, d)
 	if err != nil {
-		if d.Get("ignore_object_not_found").(bool) && errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, sql.ErrNoRows) {
 			log.Printf("[WARN] Schema not found while looking for owners during grant delete, treating as already destroyed: %v", err)
 			return nil
 		}
@@ -262,11 +256,12 @@ func resourcePostgreSQLGrantDelete(db *DBConnection, d *schema.ResourceData) err
 	}
 
 	if err := withRolesGranted(txn, owners, func() error {
-		return revokeRolePrivileges(txn, d, false)
+		// Create and update must still fail on missing objects rather than record a grant that never ran.
+		return revokeRolePrivileges(txn, d, false, true)
 	}); err != nil {
 		objectCount := d.Get("objects").(*schema.Set).Len()
 		columnCount := d.Get("columns").(*schema.Set).Len()
-		if d.Get("ignore_object_not_found").(bool) && revokeSuppressible(err, objectCount, columnCount) {
+		if revokeSuppressible(err, objectCount, columnCount) {
 			log.Printf("[WARN] Objects already gone during REVOKE, treating as already destroyed: %v", err)
 			return nil
 		}
@@ -640,7 +635,7 @@ SELECT c.relname
 	return existing, nil
 }
 
-func createGrantQuery(d *schema.ResourceData, privileges []string, objects *schema.Set) string {
+func createGrantQuery(d *schema.ResourceData, privileges []string) string {
 	var query string
 
 	switch strings.ToUpper(d.Get("object_type").(string)) {
@@ -659,7 +654,7 @@ func createGrantQuery(d *schema.ResourceData, privileges []string, objects *sche
 			pq.QuoteIdentifier(d.Get("role").(string)),
 		)
 	case "FOREIGN_DATA_WRAPPER":
-		fdwName := objects.List()[0]
+		fdwName := d.Get("objects").(*schema.Set).List()[0]
 		query = fmt.Sprintf(
 			"GRANT %s ON FOREIGN DATA WRAPPER %s TO %s",
 			strings.Join(privileges, ","),
@@ -667,7 +662,7 @@ func createGrantQuery(d *schema.ResourceData, privileges []string, objects *sche
 			pq.QuoteIdentifier(d.Get("role").(string)),
 		)
 	case "FOREIGN_SERVER":
-		srvName := objects.List()[0]
+		srvName := d.Get("objects").(*schema.Set).List()[0]
 		query = fmt.Sprintf(
 			"GRANT %s ON FOREIGN SERVER %s TO %s",
 			strings.Join(privileges, ","),
@@ -675,6 +670,7 @@ func createGrantQuery(d *schema.ResourceData, privileges []string, objects *sche
 			pq.QuoteIdentifier(d.Get("role").(string)),
 		)
 	case "COLUMN":
+		objects := d.Get("objects").(*schema.Set)
 		query = fmt.Sprintf(
 			"GRANT %s (%s) ON TABLE %s TO %s",
 			strings.Join(privileges, ","),
@@ -683,6 +679,7 @@ func createGrantQuery(d *schema.ResourceData, privileges []string, objects *sche
 			pq.QuoteIdentifier(d.Get("role").(string)),
 		)
 	case "TABLE", "SEQUENCE", "FUNCTION", "PROCEDURE", "ROUTINE":
+		objects := d.Get("objects").(*schema.Set)
 		if objects.Len() > 0 {
 			query = fmt.Sprintf(
 				"GRANT %s ON %s %s TO %s",
@@ -799,29 +796,13 @@ func grantRolePrivileges(txn *sql.Tx, d *schema.ResourceData) error {
 		return nil
 	}
 
-	objects := d.Get("objects").(*schema.Set)
-	if d.Get("ignore_object_not_found").(bool) {
-		existing, err := filterNotFoundObjects(txn, d, objects)
-		if err != nil {
-			return err
-		}
-		if objects.Len() > 0 && existing.Len() == 0 {
-			// Skipping would silently record a grant in state that was never applied.
-			return fmt.Errorf(
-				"none of the %s objects to grant on exist in schema %s",
-				d.Get("object_type").(string), d.Get("schema").(string),
-			)
-		}
-		objects = existing
-	}
-
-	query := createGrantQuery(d, privileges, objects)
+	query := createGrantQuery(d, privileges)
 
 	_, err := txn.Exec(query)
 	return err
 }
 
-func revokeRolePrivileges(txn *sql.Tx, d *schema.ResourceData, usePrevious bool) error {
+func revokeRolePrivileges(txn *sql.Tx, d *schema.ResourceData, usePrevious bool, skipMissing bool) error {
 	getter := d.Get
 
 	if usePrevious {
@@ -836,7 +817,7 @@ func revokeRolePrivileges(txn *sql.Tx, d *schema.ResourceData, usePrevious bool)
 	}
 
 	objects := getter("objects").(*schema.Set)
-	if d.Get("ignore_object_not_found").(bool) {
+	if skipMissing {
 		existing, err := filterNotFoundObjects(txn, d, objects)
 		if err != nil {
 			return err
