@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccPostgresqlFunction_Basic(t *testing.T) {
@@ -28,8 +28,8 @@ resource "postgresql_function" "basic_function" {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featureFunction)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlFunctionDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -74,8 +74,8 @@ resource "postgresql_function" "basic_function" {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featureFunction)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlFunctionDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(config, dbName),
@@ -132,8 +132,8 @@ resource "postgresql_function" "increment" {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featureFunction)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlFunctionDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -191,8 +191,8 @@ resource "postgresql_function" "func" {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featureFunction)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlFunctionDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: configCreate,

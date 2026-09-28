@@ -7,15 +7,15 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccPostgresqlDatabase_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlDatabaseDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgreSQLDatabaseConfig,
@@ -112,9 +112,9 @@ func TestAccPostgresqlDatabase_Basic(t *testing.T) {
 
 func TestAccPostgresqlDatabase_DefaultOwner(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlDatabaseDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgreSQLDatabaseConfig,
@@ -150,8 +150,8 @@ func TestAccPostgresqlDatabase_Update(t *testing.T) {
 			allowConnections = db.featureSupported(featureDBAllowConnections)
 
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlDatabaseDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(`
@@ -207,9 +207,9 @@ resource postgresql_database "test_db" {
 }
 `
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlDatabaseDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: stateConfig,
@@ -249,9 +249,9 @@ resource postgresql_database "test_db" {
 }
 `
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlDatabaseDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: stateConfig,
@@ -300,8 +300,8 @@ func TestAccPostgresqlDatabase_AlterObjectOwnership(t *testing.T) {
 			testAccPreCheck(t)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlDatabaseDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: `

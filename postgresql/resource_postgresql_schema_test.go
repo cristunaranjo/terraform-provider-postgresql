@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccPostgresqlSchema_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlSchemaDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlSchemaConfig,
@@ -60,8 +60,8 @@ func TestAccPostgresqlSchema_AddPolicy(t *testing.T) {
 			// because non-superuser fails to drop a role
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlSchemaDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlSchemaGrant1,
@@ -197,9 +197,9 @@ func TestAccPostgresqlSchema_Database(t *testing.T) {
 	`, dbName)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlSchemaDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlSchemaDatabaseConfig,
@@ -231,9 +231,9 @@ resource "postgresql_schema" "test_cascade" {
 }
 `, dbName)
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlSchemaDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlSchemaConfig,
@@ -267,9 +267,9 @@ resource "postgresql_schema" "public" {
 }
 `, dbName, roleName)
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlSchemaDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlSchemaConfig,

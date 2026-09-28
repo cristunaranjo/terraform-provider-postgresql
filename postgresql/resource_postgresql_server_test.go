@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccPostgresqlServer_Basic(t *testing.T) {
@@ -16,8 +16,8 @@ func TestAccPostgresqlServer_Basic(t *testing.T) {
 			testCheckCompatibleVersion(t, featureServer)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlServerDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlServerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlServerConfig,
@@ -128,8 +128,8 @@ func TestAccPostgresqlServer_Update(t *testing.T) {
 			testCheckCompatibleVersion(t, featureServer)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlServerDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlServerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlServerChanges1,
@@ -241,8 +241,8 @@ resource "postgresql_server" "cascade" {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featureServer)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlServerDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlServerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlServerConfig,

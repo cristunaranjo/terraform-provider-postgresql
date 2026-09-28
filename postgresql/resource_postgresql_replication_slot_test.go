@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccPostgresqlReplicationSlot_Basic(t *testing.T) {
@@ -15,8 +15,8 @@ func TestAccPostgresqlReplicationSlot_Basic(t *testing.T) {
 			testAccPreCheck(t)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlReplicationSlotDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlReplicationSlotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: `
@@ -131,8 +131,8 @@ func TestAccPostgresqlReplicationSlot_Database(t *testing.T) {
 			testAccPreCheck(t)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlReplicationSlotDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlReplicationSlotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlReplicationSlotDatabaseConfig,

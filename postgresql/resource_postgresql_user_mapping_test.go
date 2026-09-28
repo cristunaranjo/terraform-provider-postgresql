@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccPostgresqlUserMapping_Basic(t *testing.T) {
@@ -17,8 +17,8 @@ func TestAccPostgresqlUserMapping_Basic(t *testing.T) {
 			testCheckCompatibleVersion(t, featureServer)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlUserMappingDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlUserMappingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlUserMappingConfig,
@@ -47,8 +47,8 @@ func TestAccPostgresqlUserMapping_Update(t *testing.T) {
 			testCheckCompatibleVersion(t, featureServer)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlUserMappingDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlUserMappingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlUserMappingConfig,

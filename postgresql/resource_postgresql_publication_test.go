@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func testAccCheckPostgresqlPublicationDestroy(s *terraform.State) error {
@@ -109,8 +109,8 @@ func TestAccPostgresqlPublication_Database(t *testing.T) {
 			testCheckCompatibleVersion(t, featurePublication)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlPublicationDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlPublicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlPublicationDatabaseConfig,
@@ -160,8 +160,8 @@ func TestAccPostgresqlPublication_UpdateTables(t *testing.T) {
 			testCheckCompatibleVersion(t, featurePublication)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlPublicationDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlPublicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccPostgresqlPublicationBaseConfig,
@@ -232,8 +232,8 @@ func TestAccPostgresqlPublication_UpdatePublishParams(t *testing.T) {
 			testCheckCompatibleVersion(t, featurePubTruncate)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlPublicationDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlPublicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccPostgresqlPublicationBaseConfig,
@@ -308,8 +308,8 @@ func TestAccPostgresqlPublication_UpdatePublishParamsWithoutTruncate(t *testing.
 			testCheckCompatibleVersion(t, featurePubWithoutTruncate)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlPublicationDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlPublicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccPostgresqlPublicationBaseConfig,
@@ -382,8 +382,8 @@ func TestAccPostgresqlPublication_UpdateOwner(t *testing.T) {
 			testCheckCompatibleVersion(t, featurePublication)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlPublicationDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlPublicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccPostgresqlPublicationBaseConfig,
@@ -444,8 +444,8 @@ func TestAccPostgresqlPublication_UpdateName(t *testing.T) {
 			testCheckCompatibleVersion(t, featurePublication)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlPublicationDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlPublicationDestroy,
 
 		Steps: []resource.TestStep{
 			{
@@ -525,8 +525,8 @@ resource "postgresql_publication" "test" {
 			testCheckCompatibleVersion(t, featurePubTruncate)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlPublicationDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlPublicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlPublicationBasicConfig,
@@ -594,8 +594,8 @@ resource "postgresql_publication" "test" {
 			testCheckCompatibleVersion(t, featurePubWithoutTruncate)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlPublicationDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlPublicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlPublicationBasicConfig,
@@ -653,8 +653,8 @@ resource "postgresql_publication" "test" {
 			testCheckCompatibleVersion(t, featurePublication)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlPublicationDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlPublicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPostgresqlPublicationBasicConfig,
@@ -694,8 +694,8 @@ resource "postgresql_publication" "test" {
 			testCheckCompatibleVersion(t, featurePublishViaRoot)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlPublicationDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlPublicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlPublicationBasicConfig,
@@ -774,8 +774,8 @@ resource "postgresql_publication" "test" {
 			testCheckCompatibleVersion(t, featurePublication)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlPublicationDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlPublicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlPublicationBasicConfig,

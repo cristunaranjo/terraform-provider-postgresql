@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccPostgresqlExtension_Basic(t *testing.T) {
@@ -18,8 +18,8 @@ func TestAccPostgresqlExtension_Basic(t *testing.T) {
 			// even it's not a real superuser
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlExtensionDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlExtensionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlExtensionConfig,
@@ -121,8 +121,8 @@ func TestAccPostgresqlExtension_SchemaRename(t *testing.T) {
 			testCheckCompatibleVersion(t, featureExtension)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlExtensionDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlExtensionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlExtensionSchemaChange1,
@@ -188,8 +188,8 @@ func TestAccPostgresqlExtension_Database(t *testing.T) {
 			testCheckCompatibleVersion(t, featureExtension)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlExtensionDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlExtensionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlExtensionDatabaseConfig,
@@ -224,8 +224,8 @@ resource "postgresql_extension" "cascade" {
 			testCheckCompatibleVersion(t, featureExtension)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlExtensionDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlExtensionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlExtensionConfig,
@@ -273,8 +273,8 @@ resource "postgresql_extension" "cascade" {
 			testCheckCompatibleVersion(t, featureExtension)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlExtensionDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlExtensionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlExtensionConfig,

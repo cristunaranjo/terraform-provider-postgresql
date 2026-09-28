@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccPostgresqlRole_Basic(t *testing.T) {
@@ -20,8 +20,8 @@ func TestAccPostgresqlRole_Basic(t *testing.T) {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlRoleDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlRoleConfig,
@@ -83,8 +83,8 @@ resource "postgresql_role" "role_with_superuser" {
 			// Need to a be a superuser to create a superuser
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlRoleDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: roleConfig,
@@ -130,8 +130,8 @@ resource "postgresql_role" "update_role" {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlRoleDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: configCreate,
@@ -224,8 +224,8 @@ resource "postgresql_role" "test_role" {
 				t.Skipf("Skip extension tests for Postgres %s", db.version)
 			}
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlRoleDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: roleConfig,
@@ -459,8 +459,8 @@ func TestAccPostgresqlRole_WriteOnlyPassword_Basic(t *testing.T) {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlRoleDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: `
@@ -514,9 +514,9 @@ resource "postgresql_role" "switch_role" {
 }`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlRoleDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: configPassword,
@@ -577,9 +577,9 @@ resource "postgresql_role" "switch_role" {
 }`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlRoleDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: configWOv1,
