@@ -52,6 +52,31 @@ func TestAccPostgresqlServer_Basic(t *testing.T) {
 						"postgresql_server.myserver_with_version", "server_version", "1.1.1"),
 				),
 			},
+			{
+				ResourceName:      "postgresql_server.myserver_postgres",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      "postgresql_server.myserver_file",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      "postgresql_server.myserver_with_owner",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      "postgresql_server.myserver_with_type",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      "postgresql_server.myserver_with_version",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

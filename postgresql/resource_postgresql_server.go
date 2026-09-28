@@ -2,6 +2,7 @@ package postgresql
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -28,7 +29,7 @@ func resourcePostgreSQLServer() *schema.Resource {
 		Update: PGResourceFunc(resourcePostgreSQLServerUpdate),
 		Delete: PGResourceFunc(resourcePostgreSQLServerDelete),
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourcePostgreSQLServerImport,
 		},
 
 		Description: "The `postgresql_server` resource creates and manages a foreign server on a PostgreSQL server.",
@@ -77,6 +78,14 @@ func resourcePostgreSQLServer() *schema.Resource {
 			},
 		},
 	}
+}
+
+// drop_cascade is not stored in PostgreSQL, so record its default in the imported state.
+func resourcePostgreSQLServerImport(_ context.Context, d *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
+	if err := d.Set(serverDropCascadeAttr, false); err != nil {
+		return nil, err
+	}
+	return []*schema.ResourceData{d}, nil
 }
 
 func resourcePostgreSQLServerCreate(db *DBConnection, d *schema.ResourceData) error {
@@ -161,6 +170,10 @@ func resourcePostgreSQLServerRead(db *DBConnection, d *schema.ResourceData) erro
 
 func resourcePostgreSQLServerReadImpl(db *DBConnection, d *schema.ResourceData) error {
 	serverName := d.Get(serverNameAttr).(string)
+	// When importing, only the ID (the server name) is set.
+	if serverName == "" {
+		serverName = d.Id()
+	}
 	txn, err := startTransaction(db.client, "")
 	if err != nil {
 		return err

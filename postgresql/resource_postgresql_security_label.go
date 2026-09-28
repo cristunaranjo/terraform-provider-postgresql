@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -107,9 +108,10 @@ func resourcePostgreSQLSecurityLabelRead(db *DBConnection, d *schema.ResourceDat
 }
 
 func resourcePostgreSQLSecurityLabelReadImpl(db *DBConnection, d *schema.ResourceData) error {
-	objectType := d.Get(securityLabelObjectTypeAttr).(string)
-	objectName := d.Get(securityLabelObjectNameAttr).(string)
-	provider := d.Get(securityLabelProviderAttr).(string)
+	provider, objectType, objectName, err := getSecurityLabelProviderTypeName(d)
+	if err != nil {
+		return err
+	}
 
 	txn, err := startTransaction(db.client, "")
 	if err != nil {
@@ -179,6 +181,24 @@ func resourcePostgreSQLSecurityLabelUpdate(db *DBConnection, d *schema.ResourceD
 	}
 
 	return resourcePostgreSQLSecurityLabelReadImpl(db, d)
+}
+
+func getSecurityLabelProviderTypeName(d *schema.ResourceData) (string, string, string, error) {
+	provider := d.Get(securityLabelProviderAttr).(string)
+	objectType := d.Get(securityLabelObjectTypeAttr).(string)
+	objectName := d.Get(securityLabelObjectNameAttr).(string)
+
+	// When importing, only the ID is set. object_name can contain dots, so it takes the remainder.
+	if objectName == "" {
+		parsed := strings.SplitN(d.Id(), ".", 3)
+		if len(parsed) != 3 || slices.Contains(parsed, "") {
+			return "", "", "", fmt.Errorf("security label ID %s has not the expected format 'label_provider.object_type.object_name': %v", d.Id(), parsed)
+		}
+		provider = parsed[0]
+		objectType = parsed[1]
+		objectName = parsed[2]
+	}
+	return provider, objectType, objectName, nil
 }
 
 func generateSecurityLabelID(d *schema.ResourceData) string {

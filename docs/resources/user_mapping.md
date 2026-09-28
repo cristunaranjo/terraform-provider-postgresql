@@ -58,3 +58,14 @@ resource "postgresql_user_mapping" "remote" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# User mappings can be imported using `user_name.server_name`. User mappings whose user or server name contains a dot cannot be imported.
+terraform import postgresql_user_mapping.remote remote.myserver_postgres
+```

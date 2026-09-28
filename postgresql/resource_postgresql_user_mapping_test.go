@@ -6,9 +6,84 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
+
+func TestGetUserMappingUserServerName(t *testing.T) {
+	cases := []struct {
+		name         string
+		attributes   map[string]any
+		id           string
+		username     string
+		serverName   string
+		errorMessage string
+	}{
+		{
+			name: "from state",
+			attributes: map[string]any{
+				userMappingUserNameAttr:   "john.doe",
+				userMappingServerNameAttr: "srv",
+			},
+			id:         "ignored",
+			username:   "john.doe",
+			serverName: "srv",
+		},
+		{
+			name:       "import",
+			id:         "remote.myserver",
+			username:   "remote",
+			serverName: "myserver",
+		},
+		{
+			name:         "import ambiguous dotted name",
+			id:           "a.b.c",
+			errorMessage: "user mapping ID a.b.c has not the expected format 'user_name.server_name'",
+		},
+		{
+			name:         "import without dot",
+			id:           "nodot",
+			errorMessage: "user mapping ID nodot has not the expected format 'user_name.server_name'",
+		},
+		{
+			name:         "import empty server name",
+			id:           "remote.",
+			errorMessage: "user mapping ID remote. has not the expected format 'user_name.server_name'",
+		},
+		{
+			name:         "import empty user name",
+			id:           ".srv",
+			errorMessage: "user mapping ID .srv has not the expected format 'user_name.server_name'",
+		},
+		{
+			name:         "import only dot",
+			id:           ".",
+			errorMessage: "user mapping ID . has not the expected format 'user_name.server_name'",
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			d := schema.TestResourceDataRaw(t, resourcePostgreSQLUserMapping().Schema, c.attributes)
+			d.SetId(c.id)
+
+			username, serverName, err := getUserMappingUserServerName(d)
+			if c.errorMessage != "" {
+				if err == nil || !strings.Contains(err.Error(), c.errorMessage) {
+					t.Fatalf("expected error containing %q, got %v", c.errorMessage, err)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if username != c.username || serverName != c.serverName {
+				t.Fatalf("got (%q, %q), expected (%q, %q)", username, serverName, c.username, c.serverName)
+			}
+		})
+	}
+}
 
 func TestAccPostgresqlUserMapping_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -35,6 +110,16 @@ func TestAccPostgresqlUserMapping_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"postgresql_user_mapping.special_chars", "options.password", "pass=$*'"),
 				),
+			},
+			{
+				ResourceName:      "postgresql_user_mapping.remote",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      "postgresql_user_mapping.special_chars",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
