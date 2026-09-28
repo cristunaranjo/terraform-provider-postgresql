@@ -39,6 +39,8 @@ func TestAccPostgresqlServer_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"postgresql_server.myserver_postgres", "options.port", "5432"),
 					resource.TestCheckResourceAttr(
+						"postgresql_server.myserver_postgres", "options.options", "-c search_path=foo"),
+					resource.TestCheckResourceAttr(
 						"postgresql_server.myserver_file", "server_name", "myserver_file"),
 					resource.TestCheckResourceAttr(
 						"postgresql_server.myserver_file", "server_owner", "postgres"),
@@ -316,9 +318,10 @@ resource "postgresql_server" "myserver_postgres" {
   server_name = "myserver_postgres"
   fdw_name    = "postgres_fdw"
   options = {
-    host   = "foo"
-    dbname = "foodb"
-    port   = "5432"
+    host    = "foo"
+    dbname  = "foodb"
+    port    = "5432"
+    options = "-c search_path=foo"
   }
 
   depends_on = [postgresql_extension.ext_postgres_fdw]
