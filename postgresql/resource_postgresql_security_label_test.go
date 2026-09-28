@@ -59,6 +59,28 @@ func TestGetSecurityLabelProviderTypeName(t *testing.T) {
 			id:           "dummy.role",
 			errorMessage: "security label ID dummy.role has not the expected format 'label_provider.object_type.object_name'",
 		},
+		{
+			name:       "import empty inner part of object name",
+			id:         "dummy.role.a..b",
+			provider:   "dummy",
+			objectType: "role",
+			objectName: "a..b",
+		},
+		{
+			name:         "import empty object type",
+			id:           "dummy..x",
+			errorMessage: "security label ID dummy..x has not the expected format 'label_provider.object_type.object_name'",
+		},
+		{
+			name:         "import empty provider",
+			id:           ".role.x",
+			errorMessage: "security label ID .role.x has not the expected format 'label_provider.object_type.object_name'",
+		},
+		{
+			name:         "import empty object name",
+			id:           "dummy.role.",
+			errorMessage: "security label ID dummy.role. has not the expected format 'label_provider.object_type.object_name'",
+		},
 	}
 
 	for _, c := range cases {

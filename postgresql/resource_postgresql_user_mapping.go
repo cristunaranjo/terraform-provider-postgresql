@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -246,7 +247,7 @@ func getUserMappingUserServerName(d *schema.ResourceData) (string, string, error
 	// When importing, we have to parse the ID to find user and server names.
 	if username == "" {
 		parsed := strings.Split(d.Id(), ".")
-		if len(parsed) != 2 {
+		if len(parsed) != 2 || slices.Contains(parsed, "") {
 			return "", "", fmt.Errorf("user mapping ID %s has not the expected format 'user_name.server_name': %v", d.Id(), parsed)
 		}
 		username = parsed[0]

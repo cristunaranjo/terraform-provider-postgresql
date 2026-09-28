@@ -46,6 +46,21 @@ func TestGetUserMappingUserServerName(t *testing.T) {
 			id:           "nodot",
 			errorMessage: "user mapping ID nodot has not the expected format 'user_name.server_name'",
 		},
+		{
+			name:         "import empty server name",
+			id:           "remote.",
+			errorMessage: "user mapping ID remote. has not the expected format 'user_name.server_name'",
+		},
+		{
+			name:         "import empty user name",
+			id:           ".srv",
+			errorMessage: "user mapping ID .srv has not the expected format 'user_name.server_name'",
+		},
+		{
+			name:         "import only dot",
+			id:           ".",
+			errorMessage: "user mapping ID . has not the expected format 'user_name.server_name'",
+		},
 	}
 
 	for _, c := range cases {

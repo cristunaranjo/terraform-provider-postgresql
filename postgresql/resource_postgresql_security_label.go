@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -190,7 +191,7 @@ func getSecurityLabelProviderTypeName(d *schema.ResourceData) (string, string, s
 	// When importing, only the ID is set. object_name can contain dots, so it takes the remainder.
 	if objectName == "" {
 		parsed := strings.SplitN(d.Id(), ".", 3)
-		if len(parsed) != 3 {
+		if len(parsed) != 3 || slices.Contains(parsed, "") {
 			return "", "", "", fmt.Errorf("security label ID %s has not the expected format 'label_provider.object_type.object_name': %v", d.Id(), parsed)
 		}
 		provider = parsed[0]
