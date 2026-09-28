@@ -44,4 +44,7 @@ resource "postgresql_security_label" "workload" {
 
 ## Import
 
-Security label is an attribute that can be added multiple times, so no import is needed, simply apply again.
+```shell
+# Security labels can be imported using `label_provider.object_type.object_name`. Quote the ID when the object type contains a space, e.g. "pgaadauth.materialized view.my_view".
+terraform import postgresql_security_label.workload pgaadauth.role.my_role
+```

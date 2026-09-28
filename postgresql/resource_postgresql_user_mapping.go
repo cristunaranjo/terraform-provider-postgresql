@@ -103,8 +103,10 @@ func resourcePostgreSQLUserMappingRead(db *DBConnection, d *schema.ResourceData)
 }
 
 func resourcePostgreSQLUserMappingReadImpl(db *DBConnection, d *schema.ResourceData) error {
-	username := d.Get(userMappingUserNameAttr).(string)
-	serverName := d.Get(userMappingServerNameAttr).(string)
+	username, serverName, err := getUserMappingUserServerName(d)
+	if err != nil {
+		return err
+	}
 
 	txn, err := startTransaction(db.client, "")
 	if err != nil {
@@ -235,6 +237,22 @@ func setUserMappingOptionsIfChanged(db *DBConnection, d *schema.ResourceData) er
 	}
 
 	return nil
+}
+
+func getUserMappingUserServerName(d *schema.ResourceData) (string, string, error) {
+	username := d.Get(userMappingUserNameAttr).(string)
+	serverName := d.Get(userMappingServerNameAttr).(string)
+
+	// When importing, we have to parse the ID to find user and server names.
+	if username == "" {
+		parsed := strings.Split(d.Id(), ".")
+		if len(parsed) != 2 {
+			return "", "", fmt.Errorf("user mapping ID %s has not the expected format 'user_name.server_name': %v", d.Id(), parsed)
+		}
+		username = parsed[0]
+		serverName = parsed[1]
+	}
+	return username, serverName, nil
 }
 
 func generateUserMappingID(d *schema.ResourceData) string {
