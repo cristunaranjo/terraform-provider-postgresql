@@ -46,13 +46,14 @@ func resourcePostgreSQLFunction() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Description: "The `postgresql_function` resource creates and manages a function on a PostgreSQL server.",
 		Schema: map[string]*schema.Schema{
 			funcSchemaAttr: {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
 				ForceNew:    true,
-				Description: "Schema where the function is located. If not specified, the provider default schema is used.",
+				Description: "The schema where the function is located. If not specified, the function is created in the `public` schema.",
 
 				DiffSuppressFunc: defaultDiffSuppressFunc,
 			},
@@ -60,7 +61,7 @@ func resourcePostgreSQLFunction() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Name of the function.",
+				Description: "The name of the function.",
 			},
 			funcArgAttr: {
 				Type: schema.TypeList,
@@ -68,19 +69,19 @@ func resourcePostgreSQLFunction() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						funcArgTypeAttr: {
 							Type:        schema.TypeString,
-							Description: "The argument type.",
+							Description: "The type of the argument.",
 							Required:    true,
 							ForceNew:    true,
 						},
 						funcArgNameAttr: {
 							Type:        schema.TypeString,
-							Description: "The argument name. The name may be required for some languages or depending on the argument mode.",
+							Description: "The name of the argument. The name may be required for some languages or depending on the argument mode.",
 							Optional:    true,
 							ForceNew:    true,
 						},
 						funcArgModeAttr: {
 							Type:        schema.TypeString,
-							Description: "The argument mode. One of: IN, OUT, INOUT, or VARIADIC",
+							Description: "Can be one of IN, INOUT, OUT, or VARIADIC. Default is IN.",
 							Optional:    true,
 							Default:     "IN",
 							ForceNew:    true,
@@ -101,14 +102,14 @@ func resourcePostgreSQLFunction() *schema.Resource {
 				},
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Function argument definitions.",
+				Description: "List of arguments for the function.",
 			},
 			funcLanguageAttr: {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
 				Default:     "plpgsql",
-				Description: "Language of the function. One of: internal, sql, c, plpgsql",
+				Description: "The function programming language. Can be one of internal, sql, c, plpgsql. Default is plpgsql.",
 
 				DiffSuppressFunc: defaultDiffSuppressFunc,
 			},
@@ -117,14 +118,14 @@ func resourcePostgreSQLFunction() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 				Computed:    true,
-				Description: "Function return type. If not specified, it will be calculated based on the output arguments",
+				Description: "Type that the function returns. It can be computed from the OUT arguments. Default is void.",
 
 				DiffSuppressFunc: defaultDiffSuppressFunc,
 			},
 			funcBodyAttr: {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Body of the function.",
+				Description: "Function body. This should be the body content within the `AS $$` and the final `$$`. It will also accept the `AS $$` and `$$` if added.",
 
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return normalizeFunctionBody(new) == old
@@ -135,13 +136,13 @@ func resourcePostgreSQLFunction() *schema.Resource {
 			},
 			funcDropCascadeAttr: {
 				Type:        schema.TypeBool,
-				Description: "Automatically drop objects that depend on the function (such as operators or triggers), and in turn all objects that depend on those objects.",
+				Description: "True to automatically drop objects that depend on the function (such as operators or triggers), and in turn all objects that depend on those objects. Default is false.",
 				Optional:    true,
 				Default:     false,
 			},
 			funcParallelAttr: {
 				Type:             schema.TypeString,
-				Description:      "If the function can be executed in parallel for a single query execution. One of: UNSAFE, RESTRICTED, SAFE",
+				Description:      "Indicates if the function is parallel safe. Can be one of UNSAFE, RESTRICTED, or SAFE. Default is UNSAFE.",
 				Optional:         true,
 				Default:          defaultFunctionParallel,
 				DiffSuppressFunc: defaultDiffSuppressFunc,
@@ -149,19 +150,19 @@ func resourcePostgreSQLFunction() *schema.Resource {
 			},
 			funcSecurityDefinerAttr: {
 				Type:        schema.TypeBool,
-				Description: "If the function should execute with the permissions of the function owner instead of the permissions of the caller.",
+				Description: "If the function should execute with the permissions of the owner, rather than the permissions of the caller. Default is false.",
 				Optional:    true,
 				Default:     false,
 			},
 			funcStrictAttr: {
 				Type:        schema.TypeBool,
-				Description: "If the function should always return NULL if any of it's inputs is NULL.",
+				Description: "If the function should always return NULL when any of the inputs is NULL. Default is false.",
 				Optional:    true,
 				Default:     false,
 			},
 			funcVolatilityAttr: {
 				Type:             schema.TypeString,
-				Description:      "Volatility of the function. One of: VOLATILE, STABLE, IMMUTABLE.",
+				Description:      "Defines the volatility of the function. Can be one of VOLATILE, STABLE, or IMMUTABLE. Default is VOLATILE.",
 				Optional:         true,
 				Default:          defaultFunctionVolatility,
 				DiffSuppressFunc: defaultDiffSuppressFunc,
@@ -172,7 +173,7 @@ func resourcePostgreSQLFunction() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				ForceNew:    true,
-				Description: "The database where the function is located. If not specified, the provider default database is used.",
+				Description: "The database where the function is located. If not specified, the function is created in the current database.",
 
 				DiffSuppressFunc: defaultDiffSuppressFunc,
 			},

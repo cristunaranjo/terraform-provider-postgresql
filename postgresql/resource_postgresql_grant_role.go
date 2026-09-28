@@ -32,25 +32,26 @@ func resourcePostgreSQLGrantRole() *schema.Resource {
 		Read:   PGResourceFunc(resourcePostgreSQLGrantRoleRead),
 		Delete: PGResourceFunc(resourcePostgreSQLGrantRoleDelete),
 
+		Description: "The `postgresql_grant_role` resource creates and manages membership in a role to one or more other roles in a non-authoritative way.",
 		Schema: map[string]*schema.Schema{
 			"role": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The name of the role to grant grant_role",
+				Description: "The name of the role that is granted a new membership.",
 			},
 			"grant_role": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The name of the role that is granted to role",
+				Description: "The name of the role that is added to `role`.",
 			},
 			"with_admin_option": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				ForceNew:    true,
 				Default:     false,
-				Description: "Permit the grant recipient to grant it to others",
+				Description: "Giving ability to grant membership to others or not for `role`. (Default: false)",
 			},
 		},
 	}

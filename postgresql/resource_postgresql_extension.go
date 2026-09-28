@@ -32,42 +32,44 @@ func resourcePostgreSQLExtension() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Description: "The `postgresql_extension` resource creates and manages an extension on a PostgreSQL server.",
 		Schema: map[string]*schema.Schema{
 			extNameAttr: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Description: "The name of the extension.",
+				Required:    true,
+				ForceNew:    true,
 			},
 			extSchemaAttr: {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				Description: "Sets the schema of an extension",
+				Description: "Sets the schema of an extension.",
 			},
 			extVersionAttr: {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				Description: "Sets the version number of the extension",
+				Description: "Sets the version number of the extension.",
 			},
 			extDatabaseAttr: {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
 				ForceNew:    true,
-				Description: "Sets the database to add the extension to",
+				Description: "Which database to create the extension on. Defaults to provider database.",
 			},
 			extDropCascadeAttr: {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "When true, will also drop all the objects that depend on the extension, and in turn all objects that depend on those objects",
+				Description: "When true, will also drop all the objects that depend on the extension, and in turn all objects that depend on those objects. (Default: false)",
 			},
 			extCreateCascadeAttr: {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "When true, will also create any extensions that this extension depends on that are not already installed",
+				Description: "When true, will also create any extensions that this extension depends on that are not already installed. (Default: false)",
 			},
 		},
 	}

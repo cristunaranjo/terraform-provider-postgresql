@@ -45,31 +45,32 @@ func resourcePostgreSQLGrant() *schema.Resource {
 		Read:   PGResourceFunc(resourcePostgreSQLGrantRead),
 		Delete: PGResourceFunc(resourcePostgreSQLGrantDelete),
 
+		Description: "The `postgresql_grant` resource creates and manages privileges given to a user for a database schema. See [PostgreSQL documentation](https://www.postgresql.org/docs/current/sql-grant.html).",
 		Schema: map[string]*schema.Schema{
 			"role": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The name of the role to grant privileges on",
+				Description: "The name of the role to grant privileges on. Set it to \"public\" for all roles.",
 			},
 			"database": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The database to grant privileges on for this role",
+				Description: "The database to grant privileges on for this role.",
 			},
 			"schema": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "The database schema to grant privileges on for this role",
+				Description: "The database schema to grant privileges on for this role. Required except if `object_type` is `database`, `foreign_data_wrapper` or `foreign_server`.",
 			},
 			"object_type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(allowedObjectTypes, false),
-				Description:  "The PostgreSQL object type to grant the privileges on (one of: " + strings.Join(allowedObjectTypes, ", ") + ")",
+				Description:  "The PostgreSQL object type to grant the privileges on (one of: " + strings.Join(allowedObjectTypes, ", ") + ").",
 			},
 			"objects": {
 				Type:        schema.TypeSet,
@@ -77,7 +78,7 @@ func resourcePostgreSQLGrant() *schema.Resource {
 				ForceNew:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Set:         schema.HashString,
-				Description: "The specific objects to grant privileges on for this role (empty means all objects of the requested type)",
+				Description: "The objects upon which to grant the privileges. An empty list (the default) means to grant permissions on *all* objects of the specified type. You cannot specify this option if the `object_type` is `database` or `schema`. When `object_type` is `column`, `foreign_data_wrapper` or `foreign_server`, exactly one value is required.",
 			},
 			"columns": {
 				Type:        schema.TypeSet,
@@ -85,24 +86,34 @@ func resourcePostgreSQLGrant() *schema.Resource {
 				ForceNew:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Set:         schema.HashString,
-				Description: "The specific columns to grant privileges on for this role",
+				Description: "The columns upon which to grant the privileges. Required when `object_type` is `column`. You cannot specify this option if the `object_type` is not `column`.",
 			},
 			"privileges": {
 				Type:        schema.TypeSet,
 				Required:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Set:         schema.HashString,
-				Description: "The list of privileges to grant",
+				Description: grantPrivilegesDescription(),
 			},
 			"with_grant_option": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				ForceNew:    true,
 				Default:     false,
-				Description: "Permit the grant recipient to grant it to others",
+				Description: "Whether the recipient of these privileges can grant the same privileges to others. Defaults to false.",
 			},
 		},
 	}
+}
+
+func grantPrivilegesDescription() string {
+	var b strings.Builder
+	b.WriteString("The list of privileges to grant. An empty list could be provided to revoke all privileges for this role. " +
+		"The allowed privileges depend on `object_type` (`MAINTAIN` is also allowed for `table` on PostgreSQL 17 and later):")
+	for _, objectType := range allowedObjectTypes {
+		fmt.Fprintf(&b, "\n  - `%s`: %s", objectType, strings.Join(allowedPrivileges[objectType], ", "))
+	}
+	return b.String()
 }
 
 func resourcePostgreSQLGrantRead(db *DBConnection, d *schema.ResourceData) error {

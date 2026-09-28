@@ -1,0 +1,1 @@
+terraform import postgresql_physical_replication_slot.my_slot my_slot

@@ -27,18 +27,19 @@ func resourcePostgreSQLUserMapping() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Description: "The `postgresql_user_mapping` resource creates and manages a user mapping on a PostgreSQL server.",
 		Schema: map[string]*schema.Schema{
 			userMappingUserNameAttr: {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The name of an existing user that is mapped to foreign server. CURRENT_ROLE, CURRENT_USER, and USER match the name of the current user. When PUBLIC is specified, a so-called public mapping is created that is used when no user-specific mapping is applicable",
+				Description: "The name of an existing user that is mapped to foreign server. CURRENT_ROLE, CURRENT_USER, and USER match the name of the current user. When PUBLIC is specified, a so-called public mapping is created that is used when no user-specific mapping is applicable. Changing this value will force the creation of a new resource as this value can only be set when the user mapping is created.",
 			},
 			userMappingServerNameAttr: {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The name of an existing server for which the user mapping is to be created",
+				Description: "The name of an existing server for which the user mapping is to be created. Changing this value will force the creation of a new resource as this value can only be set when the user mapping is created.",
 			},
 			userMappingOptionsAttr: {
 				Type: schema.TypeMap,
@@ -46,7 +47,7 @@ func resourcePostgreSQLUserMapping() *schema.Resource {
 					Type: schema.TypeString,
 				},
 				Optional:    true,
-				Description: "This clause specifies the options of the user mapping. The options typically define the actual user name and password of the mapping. Option names must be unique. The allowed option names and values are specific to the server's foreign-data wrapper",
+				Description: "This clause specifies the options of the user mapping. The options typically define the actual user name and password of the mapping. Option names must be unique. The allowed option names and values are specific to the server's foreign-data wrapper.",
 			},
 		},
 	}

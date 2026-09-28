@@ -1,0 +1,1 @@
+terraform import postgresql_subscription.subscription my_database.subscription

@@ -1,0 +1,1 @@
+terraform import postgresql_replication_slot.my_slot my_database.my_slot
