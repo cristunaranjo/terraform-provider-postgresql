@@ -52,6 +52,8 @@ $ $GOPATH/bin/terraform-provider-postgresql
 ...
 ```
 
+To generate or update documentation, run `make generate`. This needs Terraform on your `PATH` to format the examples; the schema export downloads Terraform 1.15.4 itself.
+
 In order to test the provider, you can simply run `make test`.
 
 ```sh

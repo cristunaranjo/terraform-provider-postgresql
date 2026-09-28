@@ -19,12 +19,13 @@ func resourcePostgreSQLSubscription() *schema.Resource {
 		Exists:   PGResourceExistsFunc(resourcePostgreSQLSubscriptionExists),
 		Importer: &schema.ResourceImporter{StateContext: schema.ImportStatePassthroughContext},
 
+		Description: "The `postgresql_subscription` resource creates and manages a subscription on a PostgreSQL server. See [PostgreSQL documentation](https://www.postgresql.org/docs/current/sql-createsubscription.html).",
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				Description:  "The name of the subscription",
+				Description:  "The name of the subscription.",
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			"database": {
@@ -32,14 +33,14 @@ func resourcePostgreSQLSubscription() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				ForceNew:    true,
-				Description: "Sets the database to add the subscription for",
+				Description: "Which database to create the subscription on. Defaults to provider database.",
 			},
 			"conninfo": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				Sensitive:    true,
-				Description:  "The connection string to the publisher. It should follow the keyword/value format (https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING)",
+				Description:  "The connection string to the publisher. It should follow the [keyword/value format](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING)",
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			"publications": {
@@ -54,7 +55,7 @@ func resourcePostgreSQLSubscription() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 				Default:     true,
-				Description: "Specifies whether the command should create the replication slot on the publisher",
+				Description: "Specifies whether the command should create the replication slot on the publisher. Default behavior is true",
 			},
 			"slot_name": {
 				Type:         schema.TypeString,

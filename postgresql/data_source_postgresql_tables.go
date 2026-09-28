@@ -20,53 +20,54 @@ const (
 
 func dataSourcePostgreSQLDatabaseTables() *schema.Resource {
 	return &schema.Resource{
-		Read: PGResourceFunc(dataSourcePostgreSQLTablesRead),
+		Read:        PGResourceFunc(dataSourcePostgreSQLTablesRead),
+		Description: "The `postgresql_tables` data source retrieves a list of table names from a specified PostgreSQL database.",
 		Schema: map[string]*schema.Schema{
 			"database": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The PostgreSQL database which will be queried for table names",
+				Description: "The PostgreSQL database which will be queried for table names.",
 			},
 			"schemas": {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				MinItems:    0,
-				Description: "The PostgreSQL schema(s) which will be queried for table names. Queries all schemas in the database by default",
+				Description: "List of PostgreSQL schema(s) which will be queried for table names. Queries all schemas in the database by default.",
 			},
 			"table_types": {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				MinItems:    0,
-				Description: "The PostgreSQL table types which will be queried for table names. Includes all table types by default. Use 'BASE TABLE' for normal tables only",
+				Description: "List of PostgreSQL table types which will be queried for table names. Includes all table types by default (including views and temp tables). Use 'BASE TABLE' for normal tables only.",
 			},
 			"like_any_patterns": {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				MinItems:    0,
-				Description: "Expression(s) which will be pattern matched against table names in the query using the PostgreSQL LIKE ANY operator",
+				Description: "List of expressions which will be pattern matched against table names in the query using the PostgreSQL `LIKE ANY` operators.",
 			},
 			"like_all_patterns": {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				MinItems:    0,
-				Description: "Expression(s) which will be pattern matched against table names in the query using the PostgreSQL LIKE ALL operator",
+				Description: "List of expressions which will be pattern matched against table names in the query using the PostgreSQL `LIKE ALL` operators.",
 			},
 			"not_like_all_patterns": {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				MinItems:    0,
-				Description: "Expression(s) which will be pattern matched against table names in the query using the PostgreSQL NOT LIKE ALL operator",
+				Description: "List of expressions which will be pattern matched against table names in the query using the PostgreSQL `NOT LIKE ALL` operators.",
 			},
 			"regex_pattern": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Expression which will be pattern matched against table names in the query using the PostgreSQL ~ (regular expression match) operator",
+				Description: "Expression which will be pattern matched against table names in the query using the PostgreSQL `~` (regular expression match) operator.",
 			},
 			"tables": {
 				Type:     schema.TypeList,
@@ -87,7 +88,7 @@ func dataSourcePostgreSQLDatabaseTables() *schema.Resource {
 						},
 					},
 				},
-				Description: "The list of PostgreSQL tables retrieved by this data source. Note that this returns a set, so duplicate table names across different schemas will be consolidated.",
+				Description: "A list of PostgreSQL tables retrieved by this data source. Each table consists of `object_name` (the table name), `schema_name` (the parent schema) and `table_type` (the table type as defined in `information_schema.tables`).",
 			},
 		},
 	}

@@ -31,17 +31,18 @@ func resourcePostgreSQLServer() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Description: "The `postgresql_server` resource creates and manages a foreign server on a PostgreSQL server.",
 		Schema: map[string]*schema.Schema{
 			serverNameAttr: {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The name of the foreign server to be created",
+				Description: "The name of the foreign server to be created.",
 			},
 			serverTypeAttr: {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Optional server type, potentially useful to foreign-data wrappers",
+				Description: "Optional server type, potentially useful to foreign-data wrappers. Changing this value will force the creation of a new resource as this value can only be set when the foreign server is created.",
 			},
 			serverVersionAttr: {
 				Type:        schema.TypeString,
@@ -52,13 +53,13 @@ func resourcePostgreSQLServer() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The name of the foreign-data wrapper that manages the server",
+				Description: "The name of the foreign-data wrapper that manages the server. Changing this value will force the creation of a new resource as this value can only be set when the foreign server is created.",
 			},
 			serverOwnerAttr: {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				Description: "The user name of the new owner of the foreign server",
+				Description: "By default, the user who defines the server becomes its owner. Set this value to configure the new owner of the foreign server.",
 			},
 			serverOptionsAttr: {
 				Type: schema.TypeMap,
@@ -66,13 +67,13 @@ func resourcePostgreSQLServer() *schema.Resource {
 					Type: schema.TypeString,
 				},
 				Optional:    true,
-				Description: "This clause specifies the options for the server. The options typically define the connection details of the server, but the actual names and values are dependent on the server's foreign-data wrapper",
+				Description: "This clause specifies the options for the server. The options typically define the connection details of the server, but the actual names and values are dependent on the server's foreign-data wrapper.",
 			},
 			serverDropCascadeAttr: {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Automatically drop objects that depend on the server (such as user mappings), and in turn all objects that depend on those objects. Drop RESTRICT is the default",
+				Description: "When true, will drop objects that depend on the server (such as user mappings), and in turn all objects that depend on those objects. (Default: false)",
 			},
 		},
 	}

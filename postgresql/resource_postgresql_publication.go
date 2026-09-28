@@ -33,9 +33,11 @@ func resourcePostgreSQLPublication() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Description: "The `postgresql_publication` resource creates and manages a publication on a PostgreSQL server.",
 		Schema: map[string]*schema.Schema{
 			pubNameAttr: {
 				Type:         schema.TypeString,
+				Description:  "The name of the publication.",
 				Required:     true,
 				ForceNew:     false,
 				ValidateFunc: validation.StringIsNotEmpty,
@@ -45,14 +47,14 @@ func resourcePostgreSQLPublication() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				ForceNew:    true,
-				Description: "Sets the database to add the publication for",
+				Description: "Which database to create the publication on. Defaults to provider database.",
 			},
 			pubOwnerAttr: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     false,
-				Description:  "Sets the owner of the publication",
+				Description:  "Who owns the publication. Defaults to provider user.",
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			pubTablesAttr: {
@@ -61,7 +63,7 @@ func resourcePostgreSQLPublication() *schema.Resource {
 				Computed:      true,
 				ForceNew:      false,
 				Elem:          &schema.Schema{Type: schema.TypeString},
-				Description:   "Sets the tables list to publish",
+				Description:   "Which tables add to the publication. By defaults no tables added. Format of table is `<schema_name>.<table_name>`. If `<schema_name>` is not specified - default database schema will be used.",
 				ConflictsWith: []string{pubAllTablesAttr},
 			},
 			pubAllTablesAttr: {
@@ -69,7 +71,7 @@ func resourcePostgreSQLPublication() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				ForceNew:    true,
-				Description: "Sets the tables list to publish to ALL tables",
+				Description: "Should be ALL TABLES added to the publication. Defaults to 'false'",
 			},
 			pubPublishAttr: {
 				Type:        schema.TypeList,
@@ -77,19 +79,19 @@ func resourcePostgreSQLPublication() *schema.Resource {
 				Computed:    true,
 				MinItems:    1,
 				Elem:        &schema.Schema{Type: schema.TypeString},
-				Description: "Sets which DML operations will be published",
+				Description: "Which 'publish' options should be turned on. Default to 'insert','update','delete'",
 			},
 			pubPublishViaPartitionRootAttr: {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				ForceNew:    false,
-				Description: "Sets whether changes in a partitioned table using the identity and schema of the partitioned table",
+				Description: "Should be option 'publish_via_partition_root' be turned on. Default to 'false'",
 			},
 			pubDropCascadeAttr: {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "When true, will also drop all the objects that depend on the publication, and in turn all objects that depend on those objects",
+				Description: "Should all subsequent resources of the publication be dropped. Defaults to 'false'",
 			},
 		},
 	}

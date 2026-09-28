@@ -26,52 +26,53 @@ const schemaPatternMatchingTarget = "schema_name"
 
 func dataSourcePostgreSQLDatabaseSchemas() *schema.Resource {
 	return &schema.Resource{
-		Read: PGResourceFunc(dataSourcePostgreSQLSchemasRead),
+		Read:        PGResourceFunc(dataSourcePostgreSQLSchemasRead),
+		Description: "The `postgresql_schemas` data source retrieves a list of schema names from a specified PostgreSQL database.",
 		Schema: map[string]*schema.Schema{
 			"database": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The PostgreSQL database which will be queried for schema names",
+				Description: "The PostgreSQL database which will be queried for schema names.",
 			},
 			"include_system_schemas": {
 				Type:        schema.TypeBool,
 				Default:     false,
 				Optional:    true,
-				Description: "Determines whether to include system schemas (pg_ prefix and information_schema). 'public' will always be included.",
+				Description: "Determines whether to include system schemas (pg_ prefix and information_schema). 'public' will always be included. Defaults to `false`.",
 			},
 			"like_any_patterns": {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				MinItems:    0,
-				Description: "Expression(s) which will be pattern matched in the query using the PostgreSQL LIKE ANY operator",
+				Description: "List of expressions which will be pattern matched in the query using the PostgreSQL `LIKE ANY` operators.",
 			},
 			"like_all_patterns": {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				MinItems:    0,
-				Description: "Expression(s) which will be pattern matched in the query using the PostgreSQL LIKE ALL operator",
+				Description: "List of expressions which will be pattern matched in the query using the PostgreSQL `LIKE ALL` operators.",
 			},
 			"not_like_all_patterns": {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				MinItems:    0,
-				Description: "Expression(s) which will be pattern matched in the query using the PostgreSQL NOT LIKE ALL operator",
+				Description: "List of expressions which will be pattern matched in the query using the PostgreSQL `NOT LIKE ALL` operators.",
 			},
 			"regex_pattern": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Expression which will be pattern matched in the query using the PostgreSQL ~ (regular expression match) operator",
+				Description: "Expression which will be pattern matched in the query using the PostgreSQL `~` (regular expression match) operator.",
 			},
 			"schemas": {
 				Type:        schema.TypeSet,
 				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Set:         schema.HashString,
-				Description: "The list of PostgreSQL schemas retrieved by this data source",
+				Description: "A list of full names of found schemas.",
 			},
 		},
 	}

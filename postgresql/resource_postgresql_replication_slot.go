@@ -19,24 +19,26 @@ func resourcePostgreSQLReplicationSlot() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Description: "The `postgresql_replication_slot` resource creates and manages a replication slot on a PostgreSQL server.",
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Description: "The name of the replication slot.",
+				Required:    true,
+				ForceNew:    true,
 			},
 			"database": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
 				ForceNew:    true,
-				Description: "Sets the database to add the replication slot to",
+				Description: "Which database to create the replication slot on. Defaults to provider database.",
 			},
 			"plugin": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Sets the output plugin to use",
+				Description: "Sets the output plugin.",
 			},
 		},
 	}

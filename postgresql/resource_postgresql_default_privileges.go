@@ -20,30 +20,31 @@ func resourcePostgreSQLDefaultPrivileges() *schema.Resource {
 		Read:   PGResourceFunc(resourcePostgreSQLDefaultPrivilegesRead),
 		Delete: PGResourceFunc(resourcePostgreSQLDefaultPrivilegesDelete),
 
+		Description: "The `postgresql_default_privileges` resource creates and manages default privileges given to a user for a database schema.",
 		Schema: map[string]*schema.Schema{
 			"role": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The name of the role to which grant default privileges on",
+				Description: "The role that will automatically be granted the specified privileges on new objects created by the owner.",
 			},
 			"database": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The database to grant default privileges for this role",
+				Description: "The database to grant default privileges for this role.",
 			},
 			"owner": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Target role for which to alter default privileges.",
+				Description: "Specifies the role that creates objects for which the default privileges will be applied.",
 			},
 			"schema": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "The database schema to set default privileges for this role",
+				Description: "The database schema to set default privileges for this role.",
 			},
 			"object_type": {
 				Type:     schema.TypeString,
@@ -57,21 +58,21 @@ func resourcePostgreSQLDefaultPrivileges() *schema.Resource {
 					"type",
 					"schema",
 				}, false),
-				Description: "The PostgreSQL object type to set the default privileges on (one of: table, sequence, function, routine, type, schema)",
+				Description: "The PostgreSQL object type to set the default privileges on (one of: table, sequence, function, routine, type, schema).",
 			},
 			"privileges": {
 				Type:        schema.TypeSet,
 				Required:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Set:         schema.HashString,
-				Description: "The list of privileges to apply as default privileges",
+				Description: "List of privileges (e.g., SELECT, INSERT, UPDATE, DELETE) to grant on new objects created by the owner. An empty list could be provided to revoke all default privileges for this role.",
 			},
 			"with_grant_option": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				ForceNew:    true,
 				Default:     false,
-				Description: "Permit the grant recipient to grant it to others",
+				Description: "Whether the recipient of these privileges can grant the same privileges to others. Defaults to false. Cannot be true when `role` is `public`.",
 			},
 		},
 	}

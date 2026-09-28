@@ -16,11 +16,13 @@ func resourcePostgreSQLPhysicalReplicationSlot() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Description: "The `postgresql_physical_replication_slot` resource creates and manages a physical replication slot on a PostgreSQL server. This is useful to setup a cross datacenter replication, with Patroni for example, or permit any stand-by cluster to replicate physically data.",
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Description: "The name of the replication slot.",
+				Required:    true,
+				ForceNew:    true,
 			},
 		},
 	}

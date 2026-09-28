@@ -40,3 +40,37 @@ jobs:
 
       - name: testacc
         run: make testacc
+
+  generate:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.26'
+          cache-dependency-path: |
+            go.sum
+            tools/go.sum
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.15.4'
+          terraform_wrapper: false
+
+      - name: generate
+        run: make generate
+
+      - name: git diff
+        run: |
+          # Intent-to-add plus diffing against HEAD reports new, modified and deleted files alike.
+          git add --intent-to-add .
+          git diff HEAD --compact-summary --exit-code || \
+            (echo; echo "Unexpected difference in directories after code generation. Run 'make generate' command and commit."; exit 1)

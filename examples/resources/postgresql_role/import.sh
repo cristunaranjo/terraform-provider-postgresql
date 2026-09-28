@@ -1,0 +1,1 @@
+terraform import postgresql_role.replication_role replication_name

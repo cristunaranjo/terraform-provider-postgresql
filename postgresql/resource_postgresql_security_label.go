@@ -29,30 +29,31 @@ func resourcePostgreSQLSecurityLabel() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Description: "The `postgresql_security_label` resource creates and manages security labels. See [PostgreSQL documentation](https://www.postgresql.org/docs/current/sql-security-label.html).",
 		Schema: map[string]*schema.Schema{
 			securityLabelObjectNameAttr: {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The name of the existing object to apply the security label to",
+				Description: "The name of the object to be labeled. Names of objects that reside in schemas (tables, functions, etc.) can be schema-qualified.",
 			},
 			securityLabelObjectTypeAttr: {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The type of the existing object to apply the security label to",
+				Description: "The PostgreSQL object type to apply this security label to.",
 			},
 			securityLabelProviderAttr: {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The provider to apply the security label for",
+				Description: "The name of the provider with which this label is to be associated.",
 			},
 			securityLabelLabelAttr: {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    false,
-				Description: "The label to be applied",
+				Description: "The value of the security label.",
 			},
 		},
 	}

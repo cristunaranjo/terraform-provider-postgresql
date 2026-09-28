@@ -1,0 +1,1 @@
+terraform import postgresql_database.db1 testdb1

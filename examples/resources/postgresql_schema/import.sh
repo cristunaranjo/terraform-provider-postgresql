@@ -1,0 +1,1 @@
+terraform import postgresql_schema.schema_foo my_database.my_schema

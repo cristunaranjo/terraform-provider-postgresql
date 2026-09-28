@@ -36,5 +36,8 @@ fmt:
 fmtcheck:
 	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
 
-.PHONY: build test testacc vet fmt fmtcheck
+generate:
+	cd tools; go generate ./...
+
+.PHONY: build test testacc vet fmt fmtcheck generate
 

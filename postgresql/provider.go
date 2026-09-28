@@ -29,14 +29,19 @@ const (
 	defaultExpectedPostgreSQLVersion             = "9.0.0"
 )
 
+func init() {
+	schema.DescriptionKind = schema.StringMarkdown
+}
+
 // Provider returns a terraform.ResourceProvider.
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"scheme": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "postgres",
+				Type:        schema.TypeString,
+				Description: "The driver to use. Valid values are:\n  - `postgres`: Default value, use [`lib/pq`](https://pkg.go.dev/github.com/lib/pq)\n  - `awspostgres`: Use [GoCloud](#gocloud) for AWS\n  - `gcppostgres`: Use [GoCloud](#gocloud) for GCP",
+				Optional:    true,
+				Default:     "postgres",
 				ValidateFunc: validation.StringInSlice([]string{
 					"postgres",
 					"awspostgres",
@@ -47,81 +52,79 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("PGHOST", nil),
-				Description: "Name of PostgreSQL server address to connect to",
+				Description: "The address for the postgresql server connection, see [GoCloud](#gocloud) for specific format. Falls back to the `PGHOST` environment variable.",
 			},
 			"port": {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("PGPORT", 5432),
-				Description: "The PostgreSQL port number to connect to at the server host, or socket file name extension for Unix-domain connections",
+				Description: "The port for the postgresql server connection, or socket file name extension for Unix-domain connections. Falls back to the `PGPORT` environment variable, then to `5432`.",
 			},
 			"database": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The name of the database to connect to in order to connect to (defaults to `postgres`).",
+				Description: "Database to connect to. Falls back to the `PGDATABASE` environment variable, then to `postgres`.",
 				DefaultFunc: schema.EnvDefaultFunc("PGDATABASE", "postgres"),
 			},
 			"username": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("PGUSER", "postgres"),
-				Description: "PostgreSQL user name to connect as",
+				Description: "Username for the server connection. Falls back to the `PGUSER` environment variable, then to `postgres`.",
 			},
 			"password": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("PGPASSWORD", nil),
-				Description: "Password to be used if the PostgreSQL server demands password authentication",
+				Description: "Password for the server connection. Falls back to the `PGPASSWORD` environment variable.",
 				Sensitive:   true,
 			},
 
 			"aws_rds_iam_auth": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Description: "Use rds_iam instead of password authentication " +
-					"(see: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html)",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "If set to `true`, call the AWS RDS API to grab a temporary password, using AWS Credentials from the environment (or the given profile, see `aws_rds_iam_profile`). See [IAM database authentication](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html).",
 			},
 
 			"aws_rds_iam_profile": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "AWS profile to use for IAM auth",
+				Description: "The AWS IAM Profile to use while using AWS RDS IAM Auth.",
 			},
 
 			"aws_rds_iam_region": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "AWS region to use for IAM auth",
+				Description: "The AWS region to use while using AWS RDS IAM Auth.",
 			},
 
 			"aws_rds_iam_provider_role_arn": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "AWS IAM role to assume for IAM auth",
+				Description: "AWS IAM role to assume while using AWS RDS IAM Auth.",
 			},
 
 			"azure_identity_auth": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Description: "Use MS Azure identity OAuth token " +
-					"(see: https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/how-to-configure-sign-in-azure-ad-authentication)",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "If set to `true`, call the Azure OAuth token endpoint for temporary token, see [Azure](#azure).",
 			},
 
 			"azure_tenant_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "MS Azure tenant ID (see: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config.html)",
+				Description: "Azure tenant ID, required if `azure_identity_auth` is `true`. [Read more](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config.html).",
 			},
 
 			"gcp_iam_impersonate_service_account": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "Service account to impersonate when using GCP IAM authentication.",
+				Description: "Service account to impersonate when using GCP IAM authentication, see [GCP](#gcp).",
 			},
 
 			// Connection username can be different than database username with user name maps (e.g.: in Azure)
@@ -129,32 +132,32 @@ func Provider() *schema.Provider {
 			"database_username": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Database username associated to the connected user (for user name maps)",
+				Description: "Username of the user in the database if different than connection username (See [user name maps](https://www.postgresql.org/docs/current/auth-username-maps.html)).",
 			},
 
 			"superuser": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("PGSUPERUSER", true),
-				Description: "Specify if the user to connect as is a Postgres superuser or not." +
-					"If not, some feature might be disabled (e.g.: Refreshing state password from Postgres)",
+				Description: "Should be set to `false` if the user to connect is not a PostgreSQL superuser (as is the case in AWS RDS or GCP SQL). In this case, some features might be disabled (e.g.: Refreshing state password from database). Falls back to the `PGSUPERUSER` environment variable, then to `true`.",
 			},
 
 			"sslmode": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("PGSSLMODE", nil),
-				Description: "This option determines whether or with what priority a secure SSL TCP/IP connection will be negotiated with the PostgreSQL server",
+				Description: "Set the priority for an SSL connection to the server. Falls back to the `PGSSLMODE` environment variable. Additional information on the options and their implications can be seen [in the `libpq(3)` SSL guide](http://www.postgresql.org/docs/current/static/libpq-ssl.html#LIBPQ-SSL-PROTECTION). Valid values for `sslmode` are (note: `prefer` is not supported by Go's [`lib/pq`](https://pkg.go.dev/github.com/lib/pq)):\n  - `disable` - No SSL\n  - `require` - Always SSL (the default, also skip verification)\n  - `verify-ca` - Always SSL (verify that the certificate presented by the server was signed by a trusted CA)\n  - `verify-full` - Always SSL (verify that the certification presented by the server was signed by a trusted CA and the server host name matches the one in the certificate)",
 			},
 			"ssl_mode": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Rename PostgreSQL provider `ssl_mode` attribute to `sslmode`",
+				Type:        schema.TypeString,
+				Description: "Deprecated alias of `sslmode`.",
+				Optional:    true,
+				Deprecated:  "Rename PostgreSQL provider `ssl_mode` attribute to `sslmode`",
 			},
 			"clientcert": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "SSL client certificate if required by the database.",
+				Description: "Configure the SSL client certificate.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cert": {
@@ -169,7 +172,7 @@ func Provider() *schema.Provider {
 						},
 						"sslinline": {
 							Type:        schema.TypeBool,
-							Description: "Must be set to true if you are inlining the cert/key instead of using a file path.",
+							Description: "If set to `true`, arguments accept inline ssl cert and key rather than a filename. Defaults to `false`.",
 							Optional:    true,
 						},
 					},
@@ -186,42 +189,42 @@ func Provider() *schema.Provider {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				DefaultFunc:  schema.EnvDefaultFunc("PGCONNECT_TIMEOUT", 180),
-				Description:  "Maximum wait for connection, in seconds. Zero or not specified means wait indefinitely.",
+				Description:  "Maximum wait for connection, in seconds. Falls back to the `PGCONNECT_TIMEOUT` environment variable, then to `180`. Zero means wait indefinitely.",
 				ValidateFunc: validation.IntAtLeast(-1),
 			},
 			"max_conn_retries": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      defaultProviderMaxConnRetries,
-				Description:  "Maximum number of connection retries. Zero means no retries.",
+				Description:  "Maximum number of connection retries. Zero means no retries. The default is `0`.",
 				ValidateFunc: validation.IntAtLeast(0),
 			},
 			"connection_retry_timeout_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      defaultProviderConnectionRetryTimeoutSeconds,
-				Description:  "Maximum total wait, in seconds, across all connection retries.",
+				Description:  "Maximum total wait, in seconds, across all connection retries. The default is `5`.",
 				ValidateFunc: validation.IntAtLeast(0),
 			},
 			"max_connections": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      defaultProviderMaxOpenConnections,
-				Description:  "Maximum number of connections to establish to the database. Zero means unlimited.",
+				Description:  "Set the maximum number of open connections to the database. The default is `20`. Zero means unlimited open connections.",
 				ValidateFunc: validation.IntAtLeast(-1),
 			},
 			"conn_max_lifetime_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      defaultProviderConnMaxLifetimeSeconds,
-				Description:  "Maximum lifetime of a connection, in seconds. Zero means unlimited.",
+				Description:  "Maximum lifetime of a connection, in seconds. The default is `0`. Zero means unlimited.",
 				ValidateFunc: validation.IntAtLeast(0),
 			},
 			"expected_version": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      defaultExpectedPostgreSQLVersion,
-				Description:  "Specify the expected version of PostgreSQL.",
+				Description:  "Specify a hint to Terraform regarding the expected version that the provider will be talking with. This is a required hint in order for Terraform to talk with an ancient version of PostgreSQL. This parameter is expected to be a [PostgreSQL Version](https://www.postgresql.org/support/versioning/) or `current`. Once a connection has been established, Terraform will fingerprint the actual version. Default: `9.0.0`.",
 				ValidateFunc: validateExpectedVersion,
 			},
 		},

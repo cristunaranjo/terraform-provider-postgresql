@@ -54,18 +54,19 @@ func resourcePostgreSQLRole() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Description: "The `postgresql_role` resource creates and manages a role on a PostgreSQL server.",
 		Schema: map[string]*schema.Schema{
 			roleNameAttr: {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The name of the role",
+				Description: "The name of the role. Must be unique on the PostgreSQL server instance where it is configured.",
 			},
 			rolePasswordAttr: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Sensitive:     true,
 				ConflictsWith: []string{rolePasswordWOAttr, rolePasswordWOVersionAttr},
-				Description:   "Sets the role's password",
+				Description:   "Sets the role's password. A password is only of use for roles having the `login` attribute set to true.",
 			},
 			rolePasswordWOAttr: {
 				Type:          schema.TypeString,
@@ -74,19 +75,20 @@ func resourcePostgreSQLRole() *schema.Resource {
 				ConflictsWith: []string{rolePasswordAttr},
 				RequiredWith:  []string{rolePasswordWOVersionAttr},
 				WriteOnly:     true,
-				Description:   "Sets the role's password without storing it in the state file.",
+				Description:   "Sets the role's password without storing it in the state file. This is useful for managing passwords securely. Must be used together with `password_wo_version`. Conflicts with `password`.",
 			},
 			rolePasswordWOVersionAttr: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{rolePasswordAttr},
 				RequiredWith:  []string{rolePasswordWOAttr},
-				Description:   "Prevents applies from updating the role password on every apply unless the value changes.",
+				Description:   "Prevents applies from updating the role password on every apply unless the value changes. This version string should be updated whenever you want to change the password specified in `password_wo`. Must be used together with `password_wo`. Conflicts with `password`.",
 			},
 			roleDepEncryptedAttr: {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: fmt.Sprintf("Rename PostgreSQL role resource attribute %q to %q", roleDepEncryptedAttr, roleEncryptedPassAttr),
+				Type:        schema.TypeString,
+				Description: "Deprecated and ignored, use `encrypted_password` instead.",
+				Optional:    true,
+				Deprecated:  fmt.Sprintf("Rename PostgreSQL role resource attribute %q to %q", roleDepEncryptedAttr, roleEncryptedPassAttr),
 			},
 			roleRolesAttr: {
 				Type:        schema.TypeSet,
@@ -94,104 +96,104 @@ func resourcePostgreSQLRole() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Set:         schema.HashString,
 				MinItems:    0,
-				Description: "Role(s) to grant to this new role",
+				Description: "Defines list of roles which will be granted to this new role.",
 			},
 			roleSearchPathAttr: {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				MinItems:    0,
-				Description: "Sets the role's search path",
+				Description: "Alters the search path of this new role. Note that due to limitations in the implementation, values cannot contain the substring `\", \"`.",
 			},
 			roleEncryptedPassAttr: {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     true,
-				Description: "Control whether the password is stored encrypted in the system catalogs",
+				Description: "Defines whether the password is stored encrypted in the system catalogs. Default value is `true`. NOTE: this value is always set (to the conservative and safe value), but may interfere with the behavior of [PostgreSQL's `password_encryption` setting](https://www.postgresql.org/docs/current/static/runtime-config-connection.html#GUC-PASSWORD-ENCRYPTION).",
 			},
 			roleValidUntilAttr: {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "infinity",
-				Description: "Sets a date and time after which the role's password is no longer valid",
+				Description: "Defines the date and time after which the role's password is no longer valid. Established connections past this `valid_until` will have to be manually terminated. This value corresponds to a PostgreSQL datetime. If omitted or the magic value `NULL` is used, `valid_until` will be set to `infinity`. Default is `NULL`, therefore `infinity`.",
 			},
 			roleConnLimitAttr: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      -1,
-				Description:  "How many concurrent connections can be made with this role",
+				Description:  "If this role can log in, this specifies how many concurrent connections the role can establish. `-1` (the default) means no limit.",
 				ValidateFunc: validation.IntAtLeast(-1),
 			},
 			roleSuperuserAttr: {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: `Determine whether the new role is a "superuser"`,
+				Description: "Defines whether the role is a \"superuser\", and therefore can override all access restrictions within the database. Default value is `false`.",
 			},
 			roleCreateDBAttr: {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Define a role's ability to create databases",
+				Description: "Defines a role's ability to execute `CREATE DATABASE`. Default value is `false`.",
 			},
 			roleCreateRoleAttr: {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Determine whether this role will be permitted to create new roles",
+				Description: "Defines a role's ability to execute `CREATE ROLE`. A role with this privilege can also alter and drop other roles. Default value is `false`.",
 			},
 			roleIdleInTransactionSessionTimeoutAttr: {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Description:  "Terminate any session with an open transaction that has been idle for longer than the specified duration in milliseconds",
+				Description:  "Defines [`idle_in_transaction_session_timeout`](https://www.postgresql.org/docs/current/runtime-config-client.html#GUC-IDLE-IN-TRANSACTION-SESSION-TIMEOUT) setting for this role which terminates any session with an open transaction that has been idle for longer than the specified duration in milliseconds. Must be greater than or equal to `0`.",
 				ValidateFunc: validation.IntAtLeast(0),
 			},
 			roleInheritAttr: {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     true,
-				Description: `Determine whether a role "inherits" the privileges of roles it is a member of`,
+				Description: "Defines whether a role \"inherits\" the privileges of roles it is a member of. Default value is `true`.",
 			},
 			roleLoginAttr: {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Determine whether a role is allowed to log in",
+				Description: "Defines whether role is allowed to log in. Roles without this attribute are useful for managing database privileges, but are not users in the usual sense of the word. Default value is `false`.",
 			},
 			roleReplicationAttr: {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Determine whether a role is allowed to initiate streaming replication or put the system in and out of backup mode",
+				Description: "Defines whether a role is allowed to initiate streaming replication or put the system in and out of backup mode. Default value is `false`.",
 			},
 			roleBypassRLSAttr: {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Determine whether a role bypasses every row-level security (RLS) policy",
+				Description: "Defines whether a role bypasses every row-level security (RLS) policy. Default value is `false`.",
 			},
 			roleSkipDropRoleAttr: {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Skip actually running the DROP ROLE command when removing a ROLE from PostgreSQL",
+				Description: "When a PostgreSQL ROLE exists in multiple databases and the ROLE is dropped, the [cleanup of ownership of objects](https://www.postgresql.org/docs/current/static/role-removal.html) in each of the respective databases must occur before the ROLE can be dropped from the catalog. Set this option to true when there are multiple databases in a PostgreSQL cluster using the same PostgreSQL ROLE for object ownership. This is the third and final step taken when removing a ROLE from a database.",
 			},
 			roleSkipReassignOwnedAttr: {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Skip actually running the REASSIGN OWNED command when removing a role from PostgreSQL",
+				Description: "When a PostgreSQL ROLE exists in multiple databases and the ROLE is dropped, a [`REASSIGN OWNED`](https://www.postgresql.org/docs/current/static/sql-reassign-owned.html) must be executed on each of the respective databases before the `DROP ROLE` can be executed to drop the ROLE from the catalog. This is the first and second steps taken when removing a ROLE from a database (the second step being an implicit [`DROP OWNED`](https://www.postgresql.org/docs/current/static/sql-drop-owned.html)).",
 			},
 			roleStatementTimeoutAttr: {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Description:  "Abort any statement that takes more than the specified number of milliseconds",
+				Description:  "Defines [`statement_timeout`](https://www.postgresql.org/docs/current/runtime-config-client.html#RUNTIME-CONFIG-CLIENT-STATEMENT) setting for this role which allows to abort any statement that takes more than the specified amount of time in milliseconds.",
 				ValidateFunc: validation.IntAtLeast(0),
 			},
 			roleAssumeRoleAttr: {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Role to switch to at login",
+				Description: "Defines the role to switch to at login via [`SET ROLE`](https://www.postgresql.org/docs/current/sql-set-role.html).",
 			},
 		},
 	}
@@ -568,7 +570,7 @@ func readIdleInTransactionSessionTimeout(roleConfig pq.ByteaArray) (int, error) 
 			var result = strings.Split(strings.TrimPrefix(config, roleIdleInTransactionSessionTimeoutAttr+"="), ", ")
 			res, err := strconv.Atoi(result[0])
 			if err != nil {
-				return -1, fmt.Errorf("error reading statement_timeout: %w", err)
+				return -1, fmt.Errorf("error reading idle_in_transaction_session_timeout: %w", err)
 			}
 			return res, nil
 		}

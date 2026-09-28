@@ -19,46 +19,47 @@ const (
 
 func dataSourcePostgreSQLDatabaseSequences() *schema.Resource {
 	return &schema.Resource{
-		Read: PGResourceFunc(dataSourcePostgreSQLSequencesRead),
+		Read:        PGResourceFunc(dataSourcePostgreSQLSequencesRead),
+		Description: "The `postgresql_sequences` data source retrieves a list of sequence names from a specified PostgreSQL database.",
 		Schema: map[string]*schema.Schema{
 			"database": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The PostgreSQL database which will be queried for sequence names",
+				Description: "The PostgreSQL database which will be queried for sequence names.",
 			},
 			"schemas": {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				MinItems:    0,
-				Description: "The PostgreSQL schema(s) which will be queried for sequence names. Queries all schemas in the database by default",
+				Description: "List of PostgreSQL schema(s) which will be queried for sequence names. Queries all schemas in the database by default.",
 			},
 			"like_any_patterns": {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				MinItems:    0,
-				Description: "Expression(s) which will be pattern matched against sequence names in the query using the PostgreSQL LIKE ANY operator",
+				Description: "List of expressions which will be pattern matched against sequence names in the query using the PostgreSQL `LIKE ANY` operators.",
 			},
 			"like_all_patterns": {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				MinItems:    0,
-				Description: "Expression(s) which will be pattern matched against sequence names in the query using the PostgreSQL LIKE ALL operator",
+				Description: "List of expressions which will be pattern matched against sequence names in the query using the PostgreSQL `LIKE ALL` operators.",
 			},
 			"not_like_all_patterns": {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				MinItems:    0,
-				Description: "Expression(s) which will be pattern matched against sequence names in the query using the PostgreSQL NOT LIKE ALL operator",
+				Description: "List of expressions which will be pattern matched against sequence names in the query using the PostgreSQL `NOT LIKE ALL` operators.",
 			},
 			"regex_pattern": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Expression which will be pattern matched against sequence names in the query using the PostgreSQL ~ (regular expression match) operator",
+				Description: "Expression which will be pattern matched against sequence names in the query using the PostgreSQL `~` (regular expression match) operator.",
 			},
 			"sequences": {
 				Type:     schema.TypeList,
@@ -79,7 +80,7 @@ func dataSourcePostgreSQLDatabaseSequences() *schema.Resource {
 						},
 					},
 				},
-				Description: "The list of PostgreSQL sequence names retrieved by this data source. Note that this returns a set, so duplicate table names across different schemas will be consolidated.",
+				Description: "A list of PostgreSQL sequences retrieved by this data source. Each sequence consists of `object_name` (the sequence name), `schema_name` (the parent schema) and `data_type` (the sequence's data type as defined in `information_schema.sequences`).",
 			},
 		},
 	}
