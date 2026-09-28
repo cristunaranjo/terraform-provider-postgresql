@@ -4,14 +4,12 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-    groups:
-      "terraform-plugin":
-        patterns:
-          - "github.com/hashicorp/terraform-plugin-*"
+    open-pull-requests-limit: 0
   - package-ecosystem: "gomod"
     directory: "/tools"
     schedule:
       interval: "daily"
+    open-pull-requests-limit: 0
   - package-ecosystem: "github-actions"
     directory: "/"
     groups:
