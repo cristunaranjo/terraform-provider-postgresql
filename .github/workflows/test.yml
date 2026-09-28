@@ -6,6 +6,9 @@ on:
     - main
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -19,15 +22,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0 https://github.com/actions/checkout/releases/tag/v6.1.0
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0 https://github.com/actions/setup-go/releases/tag/v6.5.0
         with:
           go-version: '1.26'
 
       - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2 https://github.com/hashicorp/setup-terraform/releases/tag/v3.1.2
         with:
           terraform_version: '1.15.4'
           terraform_wrapper: false
@@ -49,10 +52,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0 https://github.com/actions/checkout/releases/tag/v6.1.0
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0 https://github.com/actions/setup-go/releases/tag/v6.5.0
         with:
           go-version: '1.26'
           cache-dependency-path: |
@@ -60,7 +63,7 @@ jobs:
             tools/go.sum
 
       - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2 https://github.com/hashicorp/setup-terraform/releases/tag/v3.1.2
         with:
           terraform_version: '1.15.4'
           terraform_wrapper: false
