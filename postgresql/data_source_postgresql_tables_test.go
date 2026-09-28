@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAccPostgresqlDataSourceTables(t *testing.T) {
@@ -26,8 +26,8 @@ func TestAccPostgresqlDataSourceTables(t *testing.T) {
 	testAccPostgresqlDataSourceTablesDatabaseConfig := generateDataSourceTablesConfig(dbName)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlDataSourceTablesDatabaseConfig,

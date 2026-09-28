@@ -15,6 +15,7 @@ require (
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/hashicorp/go-cty v1.5.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.40.1
+	github.com/hashicorp/terraform-plugin-testing v1.16.0
 	github.com/lib/pq v1.12.3
 	github.com/sean-/postgresql-acl v0.0.0-20161225120419-d10489e5d217
 	github.com/stretchr/testify v1.11.1

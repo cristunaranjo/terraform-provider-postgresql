@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccPostgresqlDefaultPrivileges(t *testing.T) {
@@ -43,7 +43,7 @@ resource "postgresql_default_privileges" "test_ro" {
 					testAccPreCheck(t)
 					testCheckCompatibleVersion(t, featurePrivileges)
 				},
-				Providers: testAccProviders,
+				ProviderFactories: testAccProviderFactories,
 				Steps: []resource.TestStep{
 					{
 						Config: fmt.Sprintf(tfConfig, `[]`),
@@ -165,7 +165,7 @@ resource "postgresql_default_privileges" "test_ro" {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: stateConfig,
@@ -226,7 +226,7 @@ resource "postgresql_default_privileges" "test_ro" {
 					testAccPreCheck(t)
 					testCheckCompatibleVersion(t, featurePrivileges)
 				},
-				Providers: testAccProviders,
+				ProviderFactories: testAccProviderFactories,
 				Steps: []resource.TestStep{
 					{
 						Config: fmt.Sprintf(tfConfig, `["SELECT"]`),
@@ -303,7 +303,7 @@ resource "postgresql_default_privileges" "test_ro" {
 					testCheckCompatibleVersion(t, featurePrivileges)
 					testCheckCompatibleVersion(t, featurePrivilegesOnSchemas)
 				},
-				Providers: testAccProviders,
+				ProviderFactories: testAccProviderFactories,
 				Steps: []resource.TestStep{
 					{
 						Config: fmt.Sprintf(tfConfig, `[]`),
@@ -372,7 +372,7 @@ resource "postgresql_default_privileges" "test" {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: resourceConfig,

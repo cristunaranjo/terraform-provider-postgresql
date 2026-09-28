@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func testAccCheckPostgresqlSubscriptionDestroy(s *terraform.State) error {
@@ -192,8 +192,8 @@ func TestAccPostgresqlSubscription_Basic(t *testing.T) {
 			testAccPreCheck(t)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlSubscriptionDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlSubscriptionDatabaseConfig,
@@ -273,8 +273,8 @@ func TestAccPostgresqlSubscription_CustomSlotName(t *testing.T) {
 			testAccPreCheck(t)
 			testSuperuserPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPostgresqlSubscriptionDestroy,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPostgresqlSubscriptionDatabaseConfig,

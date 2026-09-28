@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/lib/pq"
 )
 
@@ -377,7 +377,7 @@ func TestAccPostgresqlGrant(t *testing.T) {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(testGrant, `["SELECT"]`),
@@ -457,7 +457,7 @@ func TestAccPostgresqlGrantColumns(t *testing.T) {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(testGrant, `["test_column_one", "test_column_two"]`, `["SELECT"]`),
@@ -546,7 +546,7 @@ func TestAccPostgresqlGrantObjects(t *testing.T) {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(testGrant, `["test_table"]`),
@@ -640,7 +640,7 @@ func TestAccPostgresqlGrantObjectDroppedUpdateError(t *testing.T) {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(testGrant, `["SELECT"]`),
@@ -691,7 +691,7 @@ func TestAccPostgresqlGrantDestroyObjectDropped(t *testing.T) {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testGrant,
@@ -747,7 +747,7 @@ func TestAccPostgresqlGrantDestroyAllObjectsDropped(t *testing.T) {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testGrant,
@@ -804,7 +804,7 @@ resource postgresql_grant "test" {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: tfConfig,
@@ -851,7 +851,7 @@ func TestAccPostgresqlGrantEmptyObjectsDestroy(t *testing.T) {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testGrant,
@@ -904,7 +904,7 @@ func TestAccPostgresqlGrantSequenceDropped(t *testing.T) {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testGrant,
@@ -968,7 +968,7 @@ resource postgresql_grant "test" {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: tfConfig,
@@ -1022,7 +1022,7 @@ func TestAccPostgresqlGrantObjectsChangedAfterDrop(t *testing.T) {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(testGrant, `["test_table", "test_table2", "test_table3"]`),
@@ -1060,7 +1060,7 @@ func TestAccPostgresqlGrantObjectsError(t *testing.T) {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: `resource "postgresql_grant" "test" {
@@ -1115,7 +1115,7 @@ func TestAccPostgresqlGrantColumnsError(t *testing.T) {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: `resource "postgresql_grant" "test" {
@@ -1215,7 +1215,7 @@ func TestAccPostgresqlGrantPublic(t *testing.T) {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(testGrant, `["SELECT"]`),
@@ -1293,7 +1293,7 @@ func TestAccPostgresqlGrantEmptyPrivileges(t *testing.T) {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: tfConfig,
@@ -1354,7 +1354,7 @@ resource postgresql_grant "test" {
 					testAccPreCheck(t)
 					testCheckCompatibleVersion(t, featurePrivileges)
 				},
-				Providers: testAccProviders,
+				ProviderFactories: testAccProviderFactories,
 				Steps: []resource.TestStep{
 					{
 						Config: tfConfig,
@@ -1416,7 +1416,7 @@ resource postgresql_grant "test" {
 					testAccPreCheck(t)
 					testCheckCompatibleVersion(t, featurePrivileges)
 				},
-				Providers: testAccProviders,
+				ProviderFactories: testAccProviderFactories,
 				Steps: []resource.TestStep{
 					{
 						Config: tfConfig,
@@ -1478,7 +1478,7 @@ resource postgresql_grant "test" {
 					testAccPreCheck(t)
 					testCheckCompatibleVersion(t, featurePrivileges)
 				},
-				Providers: testAccProviders,
+				ProviderFactories: testAccProviderFactories,
 				Steps: []resource.TestStep{
 					{
 						Config: tfConfig,
@@ -1546,7 +1546,7 @@ resource postgresql_grant "test" {
 					testAccPreCheck(t)
 					testCheckCompatibleVersion(t, featurePrivileges)
 				},
-				Providers: testAccProviders,
+				ProviderFactories: testAccProviderFactories,
 				Steps: []resource.TestStep{
 					{
 						Config: tfConfigRoutine,
@@ -1593,7 +1593,7 @@ resource "postgresql_grant" "test" {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			// Not allowed to create
 			{
@@ -1659,7 +1659,7 @@ func TestAccPostgresqlImplicitGrants(t *testing.T) {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(testGrant, `["ALL"]`),
@@ -1732,7 +1732,7 @@ resource "postgresql_grant" "test" {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(config, `["USAGE"]`),
@@ -1802,7 +1802,7 @@ resource "postgresql_grant" "test" {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			// Grant usage
 			{
@@ -1876,7 +1876,7 @@ resource "postgresql_grant" "test" {
 			testAccPreCheck(t)
 			testCheckCompatibleVersion(t, featurePrivileges)
 		},
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			// Grant usage
 			{
@@ -1943,7 +1943,7 @@ func TestAccPostgresqlGrantOwnerPG15(t *testing.T) {
 
 			}()
 		},
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: tfConfig,
