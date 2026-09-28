@@ -568,7 +568,7 @@ func readIdleInTransactionSessionTimeout(roleConfig pq.ByteaArray) (int, error) 
 			var result = strings.Split(strings.TrimPrefix(config, roleIdleInTransactionSessionTimeoutAttr+"="), ", ")
 			res, err := strconv.Atoi(result[0])
 			if err != nil {
-				return -1, fmt.Errorf("error reading statement_timeout: %w", err)
+				return -1, fmt.Errorf("error reading idle_in_transaction_session_timeout: %w", err)
 			}
 			return res, nil
 		}
