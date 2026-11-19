@@ -2,6 +2,7 @@ package postgresql
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/lib/pq"
 )
 
 func TestAccPostgresqlRole_Basic(t *testing.T) {
@@ -193,6 +195,49 @@ resource "postgresql_role" "update_role" {
 	})
 }
 
+func TestAccPostgresqlRole_UpdatePasswordNull(t *testing.T) {
+	var configCreate = `
+resource "postgresql_role" "pwd_null_role" {
+  name = "pwd_null_role"
+  login = true
+  password = "toto"
+}
+`
+
+	var configUpdate = `
+resource "postgresql_role" "pwd_null_role" {
+  name = "pwd_null_role"
+  login = true
+  password = "NULL"
+}
+`
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testCheckCompatibleVersion(t, featurePrivileges)
+		},
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPostgresqlRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: configCreate,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPostgresqlRoleExists("pwd_null_role", nil, nil),
+					testAccCheckRoleCanLogin(t, "pwd_null_role", "toto"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPostgresqlRoleExists("pwd_null_role", nil, nil),
+					testAccCheckRoleCannotLogin(t, "pwd_null_role", "toto"),
+					testAccCheckRoleCannotLogin(t, "pwd_null_role", "NULL"),
+				),
+			},
+		},
+	})
+}
+
 // Test to create a role with admin user (usually postgres) granted to it
 // There were a bug on RDS like setup (with a non-superuser postgres role)
 // where it couldn't delete the role in this case.
@@ -318,6 +363,25 @@ func testAccCheckRoleCanLogin(t *testing.T, role, password string) resource.Test
 			return fmt.Errorf("could not connect as role %s: %v", role, err)
 		}
 		return nil
+	}
+}
+
+func testAccCheckRoleCannotLogin(t *testing.T, role, password string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		config := getTestConfig(t)
+		config.Username = role
+		config.Password = password
+		db, err := sql.Open("postgres", config.connStr("postgres"))
+		if err != nil {
+			return fmt.Errorf("could not open SQL connection: %v", err)
+		}
+		defer db.Close()
+
+		err = db.Ping()
+		if pqErr, ok := errors.AsType[*pq.Error](err); ok && pqErr.Code == "28P01" {
+			return nil
+		}
+		return fmt.Errorf("expected password authentication to fail for role %s, got: %v", role, err)
 	}
 }
 
