@@ -66,7 +66,7 @@ func resourcePostgreSQLRole() *schema.Resource {
 				Optional:      true,
 				Sensitive:     true,
 				ConflictsWith: []string{rolePasswordWOAttr, rolePasswordWOVersionAttr},
-				Description:   "Sets the role's password. A password is only of use for roles having the `login` attribute set to true. Set it to `NULL` to remove the role's password.",
+				Description:   "Sets the role's password. A password is only of use for roles having the `login` attribute set to true. Set it to the magic value `NULL` (case-insensitive) to remove the role's password.",
 			},
 			rolePasswordWOAttr: {
 				Type:          schema.TypeString,
@@ -75,7 +75,7 @@ func resourcePostgreSQLRole() *schema.Resource {
 				ConflictsWith: []string{rolePasswordAttr},
 				RequiredWith:  []string{rolePasswordWOVersionAttr},
 				WriteOnly:     true,
-				Description:   "Sets the role's password without storing it in the state file. This is useful for managing passwords securely. Set it to `NULL` to remove the role's password. Must be used together with `password_wo_version`. Conflicts with `password`.",
+				Description:   "Sets the role's password without storing it in the state file. This is useful for managing passwords securely. Set it to the magic value `NULL` (case-insensitive) to remove the role's password. Must be used together with `password_wo_version`. Conflicts with `password`.",
 			},
 			rolePasswordWOVersionAttr: {
 				Type:          schema.TypeString,
@@ -646,8 +646,11 @@ func readRolePassword(db *DBConnection, d *schema.ResourceData, roleCanLogin boo
 	case err != nil:
 		return "", fmt.Errorf("error reading role: %w", err)
 	}
-	if rolePassword == "" && strings.ToUpper(statePassword) == "NULL" {
-		return statePassword, nil
+	if strings.ToUpper(statePassword) == "NULL" {
+		if rolePassword == "" {
+			return statePassword, nil
+		}
+		return rolePassword, nil
 	}
 	// If the password isn't already in md5 format, but hashing the input
 	// matches the password in the database for the user, they are the same
