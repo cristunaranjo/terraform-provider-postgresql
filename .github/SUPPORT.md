@@ -1,5 +1,7 @@
 # Support
 
-Terraform is a mature project with a growing community. There are active, dedicated people willing to help you through various mediums.
+If you found a bug in this provider or want to suggest a change, open an issue at https://github.com/cristunaranjo/terraform-provider-postgresql/issues.
 
-Take a look at those mediums listed at https://www.terraform.io/community.html
+Please say whether the same problem happens with the upstream provider, [cyrilgdn/postgresql](https://github.com/cyrilgdn/terraform-provider-postgresql). If it does, it may be worth reporting there as well.
+
+For general Terraform or OpenTofu questions, use their own communities.

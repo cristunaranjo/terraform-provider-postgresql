@@ -1,43 +1,35 @@
-Hi there,
+### Versions
 
-Thank you for opening an issue. Please provide the following information:
+- Provider version (`cristunaranjo/postgresql`):
+- Terraform or OpenTofu version (`terraform version` or `tofu version`):
+- PostgreSQL version and where it runs (self-hosted, RDS, Aiven, ...):
 
-### Terraform Version
-Run `terraform -v` to show the version. If you are not running the latest version of Terraform, please upgrade because your issue may have already been fixed.
+### Affected resources
 
-### Affected Resource(s)
-Please list the resources as a list, for example:
-- opc_instance
-- opc_storage_volume
+For example `postgresql_grant`, `postgresql_role`.
 
-If this issue appears to affect multiple resources, it may be an issue with Terraform's core, so please mention this.
+### Configuration
 
-### Terraform Configuration Files
 ```hcl
-# Copy-paste your Terraform configurations here - for large Terraform configs,
-# please use a service like Dropbox and share a link to the ZIP file. For
-# security, you can also encrypt the files using our GPG public key.
+# The smallest config that shows the problem. Remove passwords and hostnames.
 ```
 
-### Debug Output
-Please provider a link to a GitHub Gist containing the complete debug output: https://www.terraform.io/docs/internals/debugging.html. Please do NOT paste the debug output in the issue; just paste a link to the Gist.
+### Expected behaviour
 
-### Panic Output
-If Terraform produced a panic, please provide a link to a GitHub Gist containing the output of the `crash.log`.
-
-### Expected Behavior
 What should have happened?
 
-### Actual Behavior
-What actually happened?
+### Actual behaviour
 
-### Steps to Reproduce
-Please list the steps required to reproduce the issue, for example:
+What happened instead? Include the error message.
+
+### Steps to reproduce
+
 1. `terraform apply`
 
-### Important Factoids
-Are there anything atypical about your accounts that we should know? For example: Running in EC2 Classic? Custom version of OpenStack? Tight ACLs?
+### Debug output
 
-### References
-Are there any other GitHub issues (open or closed) or Pull Requests that should be linked here? For example:
-- GH-1234
+If it helps, attach the output of the failing command run with `TF_LOG=DEBUG`, as a Gist or a file. Remove passwords and hostnames first.
+
+### Upstream
+
+Does the same thing happen with `cyrilgdn/postgresql`? Link any related upstream issue.
