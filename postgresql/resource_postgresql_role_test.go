@@ -230,6 +230,7 @@ resource "postgresql_role" "pwd_null_role" {
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPostgresqlRoleExists("pwd_null_role", nil, nil),
+					resource.TestCheckResourceAttr("postgresql_role.pwd_null_role", "password", "NULL"),
 					testAccCheckRoleCannotLogin(t, "pwd_null_role", "toto"),
 					testAccCheckRoleCannotLogin(t, "pwd_null_role", "NULL"),
 				),
@@ -260,6 +261,7 @@ resource "postgresql_role" "pwd_null_drift_role" {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPostgresqlRoleExists("pwd_null_drift_role", nil, nil),
+					resource.TestCheckResourceAttr("postgresql_role.pwd_null_drift_role", "password", "NULL"),
 					testAccCheckRoleCannotLogin(t, "pwd_null_drift_role", "NULL"),
 				),
 			},
