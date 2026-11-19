@@ -1,3 +1,7 @@
+<p align="center">
+  <img src=".github/icon.svg" alt="" width="120">
+</p>
+
 Terraform Provider for PostgreSQL
 =================================
 
