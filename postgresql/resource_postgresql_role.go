@@ -66,7 +66,7 @@ func resourcePostgreSQLRole() *schema.Resource {
 				Optional:      true,
 				Sensitive:     true,
 				ConflictsWith: []string{rolePasswordWOAttr, rolePasswordWOVersionAttr},
-				Description:   "Sets the role's password. A password is only of use for roles having the `login` attribute set to true.",
+				Description:   "Sets the role's password. A password is only of use for roles having the `login` attribute set to true. Set it to the magic value `NULL` (case-insensitive) to remove the role's password.",
 			},
 			rolePasswordWOAttr: {
 				Type:          schema.TypeString,
@@ -75,7 +75,7 @@ func resourcePostgreSQLRole() *schema.Resource {
 				ConflictsWith: []string{rolePasswordAttr},
 				RequiredWith:  []string{rolePasswordWOVersionAttr},
 				WriteOnly:     true,
-				Description:   "Sets the role's password without storing it in the state file. This is useful for managing passwords securely. Must be used together with `password_wo_version`. Conflicts with `password`.",
+				Description:   "Sets the role's password without storing it in the state file. This is useful for managing passwords securely. Set it to the magic value `NULL` (case-insensitive) to remove the role's password. Must be used together with `password_wo_version`. Conflicts with `password`.",
 			},
 			rolePasswordWOVersionAttr: {
 				Type:          schema.TypeString,
@@ -646,6 +646,12 @@ func readRolePassword(db *DBConnection, d *schema.ResourceData, roleCanLogin boo
 	case err != nil:
 		return "", fmt.Errorf("error reading role: %w", err)
 	}
+	if strings.ToUpper(statePassword) == "NULL" {
+		if rolePassword == "" {
+			return statePassword, nil
+		}
+		return rolePassword, nil
+	}
 	// If the password isn't already in md5 format, but hashing the input
 	// matches the password in the database for the user, they are the same
 	if statePassword != "" && !strings.HasPrefix(statePassword, "md5") && !strings.HasPrefix(statePassword, "SCRAM-SHA-256") {
@@ -807,7 +813,12 @@ func setRolePassword(txn *sql.Tx, d *schema.ResourceData) error {
 		return nil
 	}
 
-	sql := fmt.Sprintf("ALTER ROLE %s PASSWORD '%s'", pq.QuoteIdentifier(roleName), pqQuoteLiteral(password))
+	var sql string
+	if strings.ToUpper(password) == "NULL" {
+		sql = fmt.Sprintf("ALTER ROLE %s PASSWORD NULL", pq.QuoteIdentifier(roleName))
+	} else {
+		sql = fmt.Sprintf("ALTER ROLE %s PASSWORD '%s'", pq.QuoteIdentifier(roleName), pqQuoteLiteral(password))
+	}
 	if _, err := txn.Exec(sql); err != nil {
 		return fmt.Errorf("error updating role password: %w", err)
 	}
